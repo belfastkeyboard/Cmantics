@@ -1,9 +1,8 @@
-
 #include <stdbool.h>
 #include <ctype.h>
-#include <malloc.h>
 #include <stdlib.h>
 #include <string.h>
+#include "arena.h"
 #include "json.h"
 
 // decl
@@ -14,28 +13,28 @@ typedef struct Value Value;
 typedef struct Pair Pair;
 
 static void throw(const char *message);
-static size_t count_children(char *data);
-static size_t count_array(char *data);
+static size_t count_children(char *data, const size_t *offset);
+static size_t count_array(char *data, const size_t *offset);
 static size_t get_file_size(FILE* file);
-static eval_t evaluation(char **ptr);
+static eval_t evaluation(char *data, size_t *offset);
 static value_t determine_type(char c);
-static value_t determine_digit(char *data);
-static void handle_string(char **src, char **ptr);
-static int handle_integer(char **ptr);
-static float handle_float(char **ptr);
-static bool handle_boolean(char **ptr, char c);
-static void *handle_null(char **ptr);
-static Array make_array(char **ptr);
-static Pair make_pair(char **ptr);
-static Object make_object(char **ptr);
-static JSON *parse_json_file(JSON *json);
+static value_t determine_digit(char *data, const size_t *offset);
+static void handle_string(Arena *arena, char **src, char *data, size_t *offset);
+static int handle_integer(char *data, size_t *offset);
+static float handle_float(char *data, size_t *offset);
+static bool handle_boolean(char *data, char c, size_t *offset);
+static void *handle_null(char *data, size_t *offset);
+static Array make_array(Arena *arena, char *data, size_t *offset);
+static Pair make_pair(Arena *arena, char *data, size_t *offset);
+static Object make_object(Arena *arena, char *data, size_t *offset);
+static JSON *parse_json_file(JSON *json, FILE *file);
 static Value *traverse_object(Object *object, Value *value, const char *key);
 static Value *traverse_array(Array *array, Value *value, const char *key);
 // decl
 
 typedef enum eval_t
 {
-    EVAL_ERROR, EVAL_MAKE_OBJ, EVAL_FIN_OBJ, EVAL_MAKE_LIST, EVAL_FIN_LIST, EVAL_MAKE_PAIR
+    EVAL_ERROR, EVAL_MAKE_OBJ, EVAL_FIN_OBJ, EVAL_MAKE_PAIR
 } eval_t;
 
 typedef struct Key
@@ -49,8 +48,8 @@ typedef struct Pair
 } Pair;
 typedef struct JSON
 {
-    FILE *file;
     Object root;
+    Arena *arena;
 } JSON;
 
 static void throw(const char *message)
@@ -59,20 +58,22 @@ static void throw(const char *message)
     exit(1);
 }
 
-static size_t count_children(char *data)
+static size_t count_children(char *data, const size_t *offset)
 {
-    size_t count = 0;
-    size_t pos = strspn(data, " \n");
+    char *cpy = data + *offset;
 
-    if (data[pos] != '}')
+    size_t count = 0;
+    size_t pos = strspn(cpy, " \n");
+
+    if (cpy[pos] != '}')
     {
         size_t depth = 0;
-        size_t len = strlen(data);
+        size_t len = strlen(cpy);
         bool in_string = false;
 
         for (int i = 0; i < len; i++)
         {
-            char c = data[i];
+            char c = cpy[i];
 
             if (!in_string && c == ':' && depth == 0)
                 count++;
@@ -89,10 +90,10 @@ static size_t count_children(char *data)
 
     return count;
 }
-static size_t count_array(char *data)
+static size_t count_array(char *data, const size_t *offset)
 {
     size_t count = 0;
-    size_t pos = strspn(data, " \n");
+    size_t pos = strspn(data + *offset, " \n");
 
     if (data[pos] != '}')
     {
@@ -102,7 +103,7 @@ static size_t count_array(char *data)
 
         for (int i = 0; i < len; i++)
         {
-            char c = data[i];
+            char c = data[*offset + i];
 
             if (!in_string && c == ',' && depth == 0)
                 count++;
@@ -133,27 +134,19 @@ static size_t get_file_size(FILE* file)
     return fsize;
 }
 
-static eval_t evaluation(char **ptr)
+static eval_t evaluation(char *data, size_t *offset)
 {
     eval_t eval;
-    char *data = *ptr;
-    size_t pos = strcspn(data, "{}[]\"");
+    *offset += strcspn(data + *offset, "{}[]\"");
 
-    data = &data[pos];
-
-    switch (*data)
+    char c = *(data + *offset);
+    switch (c)
     {
         case '{':
             eval = EVAL_MAKE_OBJ;
             break;
         case '}':
             eval = EVAL_FIN_OBJ;
-            break;
-        case '[':
-            eval = EVAL_MAKE_LIST;
-            break;
-        case ']':
-            eval = EVAL_FIN_LIST;
             break;
         case '"':
             eval = EVAL_MAKE_PAIR;
@@ -163,7 +156,7 @@ static eval_t evaluation(char **ptr)
             break;
     }
 
-    *ptr = ++data;
+    (*offset)++;
 
     return eval;
 }
@@ -188,11 +181,11 @@ static value_t determine_type(const char c)
 
     return value;
 }
-static value_t determine_digit(char *data)
+static value_t determine_digit(char *data, const size_t *offset)
 {
     value_t type = VALUE_INT;
 
-    size_t len = strcspn(data, ",");
+    size_t len = strspn(data + *offset, "-0123456789.");
     for (int i = 0; i < len; i++)
     {
         if (data[i] == '.')
@@ -205,186 +198,178 @@ static value_t determine_digit(char *data)
     return type;
 }
 
-static void handle_string(char **src, char **ptr)
+static void handle_string(Arena *arena, char **src, char *data, size_t *offset)
 {
-    char *data = *ptr;
+    size_t len = strcspn(data + *offset, "\"");
 
-    size_t len = strcspn(data, "\"");
+    *src = calloc_arena(arena, len + 1);
+    strncpy(*src, data + *offset, len);
 
-    *src = calloc(len + 1, sizeof(char));
-    strncpy(*src, data, len);
-
-    data = &data[len + 1];
-
-    *ptr = data;
+    *offset += len + 1;
 }
-static int handle_integer(char **ptr)
+static int handle_integer(char *data, size_t *offset)
 {
     int result;
+    char *ptr;
 
-    char *data = *ptr;
-
-    result = (int)strtol(data, ptr, 10);
-    (*ptr)++;
+    result = (int)strtol(data + *offset, &ptr, 10);
+    *offset += ptr - (data + *offset);
 
     return result;
 }
-static float handle_float(char **ptr)
+static float handle_float(char *data, size_t *offset)
 {
     float result;
+    char *ptr;
 
-    char *data = *ptr;
-
-    result = strtof(data, ptr);
-    (*ptr)++;
+    result = strtof(data + *offset, &ptr);
+    *offset += ptr - (data + *offset);
 
     return result;
 }
-static bool handle_boolean(char **ptr, char c)
+static bool handle_boolean(char *data, char c, size_t *offset)
 {
     char boolean[6] = { 0 };
-    char *data = *ptr;
 
     size_t len = (c == 'f') ? 5 : 4;
-    strncpy(boolean, data, len);
+    strncpy(boolean, data + *offset, len);
 
-    *ptr = &data[len];
+    *offset += len;
 
     return (strcmp(boolean, "true") == 0);
 }
-static void *handle_null(char **ptr)
+static void *handle_null(char *data, size_t *offset)
 {
     char null[5] = { 0 };
-    char *data = *ptr;
 
     size_t len = 4;
-    strncpy(null, data, len);
+    strncpy(null, data + *offset, len);
 
     if (strcmp(null, "null") != 0)
         throw("handle_null() error");
 
-    *ptr = &data[len];
+    *offset += len;
 
     return NULL;
 }
 
-static Array make_array(char **ptr)
+static Array make_array(Arena *arena, char *data, size_t *offset)
 {
     Array array = { 0 };
 
-    array.size = count_array(*ptr);
-    array.hints = malloc(sizeof(value_t) * array.size);
-    array.values = malloc(sizeof(json_t) * array.size);
+    array.size = count_array(data, offset);
+    array.hints = alloc_arena(arena, sizeof(value_t) * array.size);
+    array.values = alloc_arena(arena, sizeof(json_t) * array.size);
 
-    *ptr = &(*ptr)[strspn(*ptr, " \n")];
+    *offset += strspn(data + *offset, " \n");
 
     for (int i = 0; i < array.size; i++)
     {
         value_t hint;
         json_t  value;
-        char c = (*ptr)[0];
+        char c = data[*offset];
         value_t type = determine_type(c);
 
         if (type == VALUE_DIGIT)
         {
-            if (determine_digit(*ptr) == VALUE_INT)
+            if (determine_digit(data, offset) == VALUE_INT)
             {
                 hint = VALUE_INT;
-                value.i = handle_integer(ptr);
+                value.i = handle_integer(data, offset);
             }
             else
             {
                 hint = VALUE_FLOAT;
-                value.f = handle_float(ptr);
+                value.f = handle_float(data, offset);
             }
         }
         else if (type == VALUE_BOOL)
         {
             hint = type;
-            value.b = handle_boolean(ptr, c);
+            value.b = handle_boolean(data, c, offset);
         }
         else if (type == VALUE_STRING)
         {
-            (*ptr)++;
+            (*offset)++;
             hint = type;
             value.s = NULL;
-            handle_string(&value.s, ptr);
+            handle_string(arena, &value.s, data, offset);
         }
         else if (type == VALUE_OBJECT)
         {
-            (*ptr)++;
+            (*offset)++;
             hint = type;
-            value.o = make_object(ptr);
+            value.o = make_object(arena, data, offset);
         }
         else if (type == VALUE_ARRAY)
         {
-            (*ptr)++;
+            (*offset)++;
             hint = type;
-            value.a = make_array(ptr);
+            value.a = make_array(arena, data, offset);
         }
         else
         {
             hint = type;
-            value.n = handle_null(ptr);
+            value.n = handle_null(data, offset);
         }
 
         array.hints[i] = hint;
         array.values[i] = value;
 
-        *ptr = &(*ptr)[strspn(*ptr, ", \n")];
+        *offset += strspn(data + *offset, ", \n");
     }
 
-    *ptr = &(*ptr)[strcspn(*ptr, "]") + 1];
+    *offset += strspn(data + *offset, "]") + 1;
 
     return array;
 }
-static Pair make_pair(char **ptr)
+static Pair make_pair(Arena *arena, char *data, size_t *offset)
 {
     Pair pair = { 0 };
 
-    handle_string(&pair.key.string, ptr);
-    *ptr = &(*ptr)[strspn(*ptr, ": ")];
+    handle_string(arena, &pair.key.string, data, offset);
+    *offset += strspn(data + *offset, ": ");
 
-    char c = (*ptr)[0];
+    char c = data[*offset];
     value_t type = determine_type(c);
 
     if (type == VALUE_STRING)
     {
-        (*ptr)++;
+        (*offset)++;
         pair.value.type.s = NULL;
-        handle_string(&pair.value.type.s, ptr);
+        handle_string(arena, &pair.value.type.s, data, offset);
     }
     else if (type == VALUE_DIGIT)
     {
-        if (determine_digit(*ptr) == VALUE_INT)
+        if (determine_digit(data, offset) == VALUE_INT)
         {
             type = VALUE_INT;
-            pair.value.type.i = handle_integer(ptr);
+            pair.value.type.i = handle_integer(data, offset);
         }
         else
         {
             type = VALUE_FLOAT;
-            pair.value.type.f = handle_float(ptr);
+            pair.value.type.f = handle_float(data, offset);
         }
     }
     else if (type == VALUE_BOOL)
     {
-        pair.value.type.b = handle_boolean(ptr, c);
+        pair.value.type.b = handle_boolean(data, c, offset);
     }
     else if (type == VALUE_ARRAY)
     {
-        (*ptr)++;
-        pair.value.type.a = make_array(ptr);
+        (*offset)++;
+        pair.value.type.a = make_array(arena, data, offset);
     }
     else if (type == VALUE_OBJECT)
     {
-        (*ptr)++;
-        pair.value.type.o = make_object(ptr);
+        (*offset)++;
+        pair.value.type.o = make_object(arena, data, offset);
     }
     else if (type == VALUE_NULL)
     {
         pair.value.value_enum = type;
-        pair.value.type.n = handle_null(ptr);
+        pair.value.type.n = handle_null(data, offset);
     }
     else
         throw("make_pair() error");
@@ -393,48 +378,48 @@ static Pair make_pair(char **ptr)
 
     return pair;
 }
-static Object make_object(char **ptr)
+static Object make_object(Arena *arena, char *data, size_t *offset)
 {
     Object object = { 0 };
     eval_t eval;
 
-    size_t child_count = count_children(*ptr);
-    object.kv_pairs = malloc(sizeof(Pair) * child_count);
+    size_t child_count = count_children(data, offset);
+    object.kv_pairs = alloc_arena(arena, sizeof(Pair) * child_count);
 
-    while ((eval = evaluation(ptr)) != EVAL_FIN_OBJ)
+    while ((eval = evaluation(data, offset)) != EVAL_FIN_OBJ)
     {
         if (eval == EVAL_MAKE_PAIR)
         {
-            object.kv_pairs[object.pair_size] = make_pair(ptr);
+            object.kv_pairs[object.pair_size] = make_pair(arena, data, offset);
             object.pair_size++;
-        }
-        else
-        {
-            // throw an error
         }
     }
 
     return object;
 }
 
-static JSON *parse_json_file(JSON *json)
+static JSON *parse_json_file(JSON *json, FILE *file)
 {
-    char *fdata;
-    size_t fsize;
+    if (!json)
+        throw("JSON is NULL");
+    else
+    {
+        char *fdata;
+        size_t fsize;
+        size_t offset = 0;
 
-    fsize = get_file_size(json->file);
-    fdata = malloc(fsize + 1);
+        fsize = get_file_size(file);
 
-    char *cpy = fdata;
+        json->arena = create_arena(fsize * 2, ARENA_DYNAMIC);
+        fdata = calloc_arena(json->arena, fsize + 1);
 
-    fread(cpy, sizeof(char), fsize, json->file);
+        fread(fdata, sizeof(char), fsize, file);
 
-    eval_t eval = evaluation(&cpy);
+        eval_t eval = evaluation(fdata, &offset);
 
-    if (eval == EVAL_MAKE_OBJ)
-        json->root = make_object(&cpy);
-
-    free(fdata);
+        if (eval == EVAL_MAKE_OBJ)
+            json->root = make_object(json->arena, fdata, &offset);
+    }
 
     return json;
 }
@@ -468,20 +453,22 @@ static Value *traverse_object(Object *object, Value *value, const char *key)
     return value;
 }
 
-JSON *json_fopen(const char *file)
+JSON *json_fopen(const char *path)
 {
     JSON *json = malloc(sizeof(JSON));
 
-    json->file = fopen(file, "r");
-    json = parse_json_file(json);
+    FILE *file = fopen(path, "r");
+    json = parse_json_file(json, file);
+    fclose(file);
 
     return json;
 }
-void json_fclose(JSON *json)
+void json_fclose(JSON **json)
 {
-    fclose(json->file);
+    destroy_arena(&(*json)->arena);
 
-    json->file = NULL;
+    free(*json);
+    *json = NULL;
 }
 Value *json_find(JSON *json, const char *key)
 {

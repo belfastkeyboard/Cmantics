@@ -52,5 +52,5 @@ typedef struct Value
 } Value;
 
 JSON *json_fopen(const char *file);
-void json_fclose(JSON *json);
+void json_fclose(JSON **json);
 Value *json_find(JSON *json, const char *key);
