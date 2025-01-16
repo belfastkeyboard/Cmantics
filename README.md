@@ -54,3 +54,11 @@ typedef struct Value
 - array
 
 ```Hint``` is an enum type which indicates the correct type contained in the ```Type``` value.
+
+```Object``` and ```Array``` are opaque types.
+
+To retrieve data from an ```Object``` call the ```json_find()``` function and provide a key. 
+If successful returns valid ```struct Value*``` else returns ```NULL```.
+
+To retrieve data from an ```Array``` call the ```json_lookup()``` function and provide an index.
+If successful returns valid ```struct Value*``` else returns ```NULL```.
