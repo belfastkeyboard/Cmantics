@@ -34,7 +34,7 @@ printf("\nCourse: {\n\tcourse_id: %s,\n\tcourse_name: %s,\n\tcredits: %d,\n\tgra
 json_close();
 ```
 
-The Value struct contains a type hint and the relevant data:
+The ```Value``` struct contains a type hint and the relevant data:
 
 ```c
 typedef struct Value
@@ -73,7 +73,7 @@ Array *array;
 ```Object``` and ```Array``` are opaque types.
 
 To retrieve data from an ```Object``` call the ```json_find()``` function and provide a key. 
-If successful returns valid ```struct Value*``` else returns ```NULL```.
+If successful returns valid ```Value*``` else returns ```NULL```.
 
 To retrieve data from an ```Array``` call the ```json_lookup()``` function and provide an index.
-If successful returns valid ```struct Value*``` else returns ```NULL```.
+If successful returns valid ```Value*``` else returns ```NULL```.
