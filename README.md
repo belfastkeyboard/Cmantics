@@ -1,6 +1,6 @@
 # JSON Parsing For C
 
-Simple interface for reading from .json files.
+Simple interface for reading from JSON files.
 
 Example:
 
@@ -44,7 +44,9 @@ typedef struct Value
 } Value;
 ```
 
-```Type``` is a union. It contains all possible .json types represented with C types:
+```Hint``` is an enum type which indicates the correct type contained in the ```Type``` value.
+
+```Type``` is a union. It contains all possible JSON types represented with C types:
 ```c
 // json type: null
 void *null = NULL;
@@ -67,8 +69,6 @@ Object *obj;
 // json type: array
 Array *array;
 ```
-
-```Hint``` is an enum type which indicates the correct type contained in the ```Type``` value.
 
 ```Object``` and ```Array``` are opaque types.
 
