@@ -13,7 +13,7 @@ static size_t count_array(const char *data,
     const size_t pos = strspn(data + offset,
                               " \n");
 
-    if (data[pos] != '}')
+    if (data[offset + pos] != ']')
     {
         size_t depth = 0;
         size_t len = strlen(data);

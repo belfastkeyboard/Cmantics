@@ -4,7 +4,6 @@
 #include "../internals/error.h"
 #include "../internals/pair.h"
 #include "../internals/eval.h"
-#include "../internals/types.h"
 #include "../internals/parse.h"
 #include "../internals/array.h"
 #include "../internals/obj.h"
@@ -72,7 +71,6 @@ Object *make_object(Arena *arena,
 {
     Object *object = alloc_arena(arena,
                                  sizeof(Object));
-    enum Eval eval;
 
     size_t child_count = count_children(data,
                                         offset);
@@ -80,11 +78,9 @@ Object *make_object(Arena *arena,
     object->kv_pairs = alloc_arena(arena,
                                    sizeof(Pair) * child_count);
 
-    while ((eval = evaluation(data,
-                              offset)) != EVAL_FIN_OBJ)
+    while (evaluation(data,
+                      offset) != EVAL_FIN_OBJ)
     {
-        assert(eval == EVAL_MAKE_PAIR);
-
         object->kv_pairs[object->pair_size] = make_pair(arena,
                                                         data,
                                                         offset);

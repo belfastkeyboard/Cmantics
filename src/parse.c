@@ -12,8 +12,8 @@ void handle_string(Arena *arena,
     size_t len = strcspn(data + *offset,
                          "\"") + 1;
 
-    *src = calloc_arena(arena,
-                        len);
+    *src = alloc_arena(arena,
+                       len);
 
     strncpy(*src,
             data + *offset,
