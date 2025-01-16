@@ -44,14 +44,29 @@ typedef struct Value
 } Value;
 ```
 
-```Type``` is a union. It contains all possible .json types:
-- null
-- string
-- integer
-- float
-- bool
-- object
-- array
+```Type``` is a union. It contains all possible .json types represented with C types:
+```c
+// json type: null
+void *null = NULL;
+
+// json type: string
+char *string = "string";
+
+// json type: integer
+int number_int = 0;
+
+// json type: float
+float number_float = 0.5f;
+
+// json type: bool
+bool true_or_false = false;
+
+// json type: object
+Object *obj;
+
+// json type: array
+Array *array;
+```
 
 ```Hint``` is an enum type which indicates the correct type contained in the ```Type``` value.
 
