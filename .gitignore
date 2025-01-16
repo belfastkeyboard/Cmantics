@@ -1,6 +1,5 @@
 .idea/
 cmake-build-debug/
-libs/
 
 main.c
 *.json
