@@ -5,7 +5,7 @@ set(CMAKE_C_STANDARD 23)
 
 
 # uncomment to compile release build, which removes asserts and compiles with optimisation
-#set(BUILD Release)
+set(BUILD Release)
 
 
 
@@ -20,7 +20,7 @@ file(GLOB_RECURSE LIBS "${LIB_DIR}/*.a")
 if (BUILD STREQUAL "Release")
     message(STATUS "Release build: enabling optimizations and defining NDEBUG")
 
-#    add_compile_definitions(NDEBUG)
+    add_compile_definitions(NDEBUG)
 
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -march=native -funroll-loops -ffast-math")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=native -funroll-loops -ffast-math")
@@ -28,7 +28,7 @@ endif()
 
 
 
-add_executable(
-    parse main.c
+add_library(
+    json main.c
         ${SOURCES}
 )
