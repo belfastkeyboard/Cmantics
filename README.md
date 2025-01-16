@@ -1,29 +1,56 @@
-# C Heap
-Library for all my memory-related functions 
+# JSON Parsing For C
 
-- Arena
-  - Static
-  - Dynamic
-  - Global
-- Dynamic Array
-- String Builder
-- Double-ended Queue
-- Forward List 
-- Hash Set
-- Hash Table
-- Double-ended List
-- Priority Queue
-- Queue
-- Ring Buffer
-- Span
-- Stack
-- String View
+Simple interface for reading from .json files.
 
-TODO: 
-- add support for arena allocation
-- add generic internal functions, so stack/vector etc. can make use of same code
-- resolve naming conflicts
-- make use of generic macro?
-- iterators?
-- thread safety
-- fix bugs in RB Tree
+Example:
+
+```c
+Value *json = json_open("json_example.json");
+
+Value *courses = json_find(json,
+                           "courses");
+
+Value *course = json_lookup(courses,
+                            0);
+
+Value *course_id = json_find(course,
+                             "course_id");
+
+Value *course_name = json_find(course,
+                               "course_name");
+
+Value *credits = json_find(course,
+                           "credits");
+
+Value *grade = json_find(course,
+                         "grade");
+
+printf("\nCourse: {\n\tcourse_id: %s,\n\tcourse_name: %s,\n\tcredits: %d,\n\tgrade: %s\n};\n",
+       course_id->type.s,
+       course_name->type.s,
+       credits->type.i,
+       grade->type.s);
+
+json_close();
+```
+
+The Value struct contains a type hint and the relevant data:
+
+```c
+typedef struct Value
+{
+    Hint hint;
+    Type type;
+} Value;
+```
+
+```Type``` is a union. It contains all possible .json types:
+- null
+- string
+- integer
+- float
+- bool
+- object
+- array
+
+```Hint``` is an enum type which indicates the correct type contained in the ```Type``` value.
