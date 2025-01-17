@@ -1,18 +1,21 @@
-#include <string.h>
-#include <stdlib.h>
 #include <assert.h>
+#include <stdlib.h>
+#include <string.h>
+#include "../internals/arena.h"
 #include "../internals/parse.h"
 
 
-void handle_string(Arena *arena,
-                   char **src,
+extern Arena *allocator;
+
+
+void handle_string(char **src,
                    char *data,
                    size_t *offset)
 {
     size_t len = strcspn(data + *offset,
                          "\"") + 1;
 
-    *src = alloc_arena(arena,
+    *src = alloc_arena(allocator,
                        len);
 
     strncpy(*src,

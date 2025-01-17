@@ -42,16 +42,41 @@ typedef struct JSON
 } JSON;
 
 
+
 __attribute__((warn_unused_result))
 JSON *json_open(const char *path);
 
 void json_close(void);
+
 
 JSON *json_find(JSON *value,
                 const char *key);
 
 JSON *json_lookup(JSON *value,
                   size_t index);
+
+
+JSON *json_make_value(Hint hint,
+                      void *type);
+
+
+JSON *json_make_object(void);
+
+void json_push_object(Object *object,
+                      char *key,
+                      JSON *value);
+
+void json_pop_object(Object *object,
+                     char *key);
+
+
+JSON *json_make_array(void);
+
+void json_push_array(Array *array,
+                     JSON *value);
+
+void json_pop_array(Array *array,
+                    size_t index);
 
 
 void json_write(const char *path,

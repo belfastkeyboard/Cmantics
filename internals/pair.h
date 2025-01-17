@@ -9,10 +9,9 @@ typedef char *Key;
 typedef struct Pair
 {
     Key key;
-    JSON value;
+    JSON *value;
 } Pair;
 
 
-Pair make_pair(Arena *arena,
-               char *data,
-               size_t *offset);
+Pair *make_pair(char *data,
+                size_t *offset);

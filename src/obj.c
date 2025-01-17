@@ -6,6 +6,9 @@
 #include "../internals/obj.h"
 
 
+extern Arena *allocator;
+
+
 static size_t count_children(char *data,
                              const size_t *offset)
 {
@@ -62,29 +65,27 @@ static size_t count_children(char *data,
 }
 
 
-Object *make_object(Arena *arena,
-                    char *data,
+Object *make_object(char *data,
                     size_t *offset)
 {
-    Object *object = alloc_arena(arena,
+    Object *object = alloc_arena(allocator,
                                  sizeof(Object));
 
     size_t child_count = count_children(data,
                                         offset);
 
-    object->kv_pairs = alloc_arena(arena,
+    object->pairs = alloc_arena(allocator,
                                    sizeof(Pair) * child_count);
 
     while (evaluation(data,
                       offset) != EVAL_FIN_OBJ)
     {
-        Pair pair = make_pair(arena,
-                              data,
-                              offset);
+        Pair *pair = make_pair(data,
+                               offset);
 
-        object->kv_pairs[object->pair_size] = pair;
+        object->pairs[object->size] = pair;
 
-        object->pair_size++;
+        object->size++;
     }
 
     return object;

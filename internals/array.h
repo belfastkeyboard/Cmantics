@@ -10,6 +10,5 @@ typedef struct Array
 } Array;
 
 
-Array *make_array(Arena *arena,
-                  char *data,
+Array *make_array(char *data,
                   size_t *offset);

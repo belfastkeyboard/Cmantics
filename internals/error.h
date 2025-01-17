@@ -1,5 +1,7 @@
 #pragma once
 
+#include <errno.h>
+
 
 __attribute__((noreturn))
 __attribute__((format(printf, 4, 5)))

@@ -88,6 +88,8 @@ void destroy_arena(Arena **arena)
     arena_destroy_pages(&(*arena)->curr);
 
     free(*arena);
+
+    *arena = NULL;
 }
 
 

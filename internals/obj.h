@@ -7,11 +7,10 @@
 
 typedef struct Object
 {
-    size_t pair_size;
-    struct Pair *kv_pairs;
+    size_t size;
+    struct Pair **pairs;
 } Object;
 
 
-Object *make_object(Arena *arena,
-                    char *data,
+Object *make_object(char *data,
                     size_t *offset);

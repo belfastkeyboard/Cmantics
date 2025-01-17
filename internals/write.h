@@ -3,11 +3,6 @@
 #include "obj.h"
 
 
-void write_array(FILE *file,
-                 const Array *array,
+void write_value(FILE *file,
+                 const JSON *value,
                  int indentation);
-
-
-void write_object(FILE *file,
-                  const Object *object,
-                  int indentation);

@@ -1,8 +1,11 @@
 #include <string.h>
-#include "../internals/types.h"
-#include "../internals/parse.h"
-#include "../internals/obj.h"
 #include "../internals/array.h"
+#include "../internals/obj.h"
+#include "../internals/parse.h"
+#include "../internals/value.h"
+
+
+extern Arena *allocator;
 
 
 static size_t count_array(const char *data,
@@ -62,17 +65,16 @@ static size_t count_array(const char *data,
 }
 
 
-Array *make_array(Arena *arena,
-                  char *data,
+Array *make_array(char *data,
                   size_t *offset)
 {
-    Array *array = alloc_arena(arena,
+    Array *array = alloc_arena(allocator,
                                sizeof(Array));
 
     array->size = count_array(data,
                               *offset);
 
-    array->values = alloc_arena(arena,
+    array->values = alloc_arena(allocator,
                                 sizeof(JSON) * array->size);
 
     *offset += strspn(data + *offset,
@@ -80,75 +82,10 @@ Array *make_array(Arena *arena,
 
     for (int i = 0; i < array->size; i++)
     {
-        Type type;
-        char c = data[*offset];
+        JSON *json = make_value(data,
+                                offset);
 
-        Hint hint = determine_type(c);
-
-        if (hint == HINT_DIGIT)
-        {
-            if (determine_digit(data,
-                                *offset) == HINT_INT)
-            {
-                hint = HINT_INT;
-
-                type.i = handle_integer(data,
-                                         offset);
-            }
-            else
-            {
-                hint = HINT_FLOAT;
-
-                type.f = handle_float(data,
-                                       offset);
-            }
-        }
-        else if (hint == HINT_BOOL)
-        {
-            type.b = handle_boolean(data,
-                                     c,
-                                     offset);
-        }
-        else if (hint == HINT_STRING)
-        {
-            (*offset)++;
-
-            type.s = NULL;
-
-            handle_string(arena,
-                          &type.s,
-                          data,
-                          offset);
-        }
-        else if (hint == HINT_OBJECT)
-        {
-            (*offset)++;
-
-            type.o = make_object(arena,
-                                  data,
-                                  offset);
-        }
-        else if (hint == HINT_ARRAY)
-        {
-            (*offset)++;
-
-            type.a = make_array(arena,
-                                 data,
-                                 offset);
-        }
-        else
-        {
-            type.n = handle_null(data,
-                                  offset);
-        }
-
-        JSON *value = alloc_arena(arena,
-                                   sizeof(JSON));
-
-        value->hint = hint;
-        value->type = type;
-
-        array->values[i] = value;
+        array->values[i] = json;
 
         *offset += strspn(data + *offset,
                           ", \n");

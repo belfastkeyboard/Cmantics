@@ -1,11 +1,16 @@
 #include <assert.h>
+#include <errno.h>
+#include <memory.h>
 #include <stdlib.h>
-#include "../internals/write.h"
-#include "../internals/get.h"
+#include "../internals/array.h"
+#include "../internals/ext.h"
 #include "../internals/eval.h"
+#include "../internals/get.h"
+#include "../internals/write.h"
+#include "../internals/value.h"
 
 
-static Arena *allocator;
+Arena *allocator;
 
 
 static size_t get_file_size(FILE *file)
@@ -27,8 +32,6 @@ static size_t get_file_size(FILE *file)
 
 static JSON *parse_json_file(FILE *file)
 {
-    assert(file);
-
     size_t offset = 0;
     size_t fsize = get_file_size(file);
 
@@ -42,18 +45,8 @@ static JSON *parse_json_file(FILE *file)
           fsize,
           file);
 
-    enum Eval eval = evaluation(fdata,
-                                &offset);
-
-    assert(eval == EVAL_MAKE_OBJ);
-
-    JSON *value = alloc_arena(allocator,
-                               sizeof(JSON));
-
-    value->hint = HINT_OBJECT,
-    value->type.o = make_object(allocator,
-                                fdata,
-                                &offset);
+    JSON *value = make_value(fdata,
+                             &offset);
 
     free(fdata);
 
@@ -63,20 +56,35 @@ static JSON *parse_json_file(FILE *file)
 
 JSON *json_open(const char *path)
 {
-    FILE *file = fopen(path,
-                       "r");
+    JSON *json = NULL;
 
-    JSON *value = parse_json_file(file);
+    if (is_json_file(path))
+    {
+        FILE *file = fopen(path,
+                           "r");
 
-    fclose(file);
+        if (file)
+        {
+            json = parse_json_file(file);
 
-    return value;
+            fclose(file);
+        }
+    }
+    else
+    {
+        errno = EINVAL;
+    }
+
+    return json;
 }
 
 
 void json_close(void)
 {
-    destroy_arena(&allocator);
+    if (allocator)
+    {
+        destroy_arena(&allocator);
+    }
 }
 
 
@@ -87,8 +95,15 @@ JSON *json_find(JSON *value,
 
     if (value->hint == HINT_OBJECT)
     {
-        result = scan_object(value->type.o,
-                             key);
+        size_t i;
+        Pair *pair = scan_object(value->type.o,
+                                 key,
+                                 &i);
+
+        if (pair)
+        {
+            result = pair->value;
+        }
     }
 
     return result;
@@ -109,6 +124,192 @@ JSON *json_lookup(JSON *value,
 }
 
 
+JSON *json_make_value(const Hint hint,
+                      void *type)
+{
+
+    JSON *json = NULL;
+
+    if (hint != HINT_OBJECT &&
+        hint != HINT_ARRAY)
+    {
+        json = alloc_arena(allocator,
+                           sizeof(JSON));
+
+        json->hint = hint;
+    }
+
+    switch (hint)
+    {
+        case HINT_INT:
+            json->type.i = *(int*)type;
+            break;
+        case HINT_FLOAT:
+            json->type.f = *(float*)type;
+            break;
+        case HINT_NULL:
+            json->type.n = NULL;
+            break;
+        case HINT_BOOL:
+            json->type.b = *(bool*)type;
+            break;
+        case HINT_STRING:
+            json->type.s = (char*)type;
+            break;
+        case HINT_ARRAY:
+            json = json_make_array();
+            break;
+        case HINT_OBJECT:
+            json = json_make_object();
+            break;
+        default:
+            break;
+    }
+
+    return json;
+}
+
+
+JSON *json_make_object(void)
+{
+    JSON *json = NULL;
+
+    if (allocator)
+    {
+        json = alloc_arena(allocator,
+                           sizeof(JSON));
+
+        json->hint = HINT_OBJECT;
+
+        Object *object = alloc_arena(allocator,
+                                     sizeof(Object));
+
+        object->pairs = NULL;
+        object->size = 0;
+
+        json->type.o = object;
+    }
+
+    return json;
+}
+
+void json_push_object(Object *object,
+                      char *key,
+                      JSON *value)
+{
+    size_t i;
+    Pair *existing_kv_pair = scan_object(object,
+                                         key,
+                                         &i);
+
+    if (!existing_kv_pair)
+    {
+        const size_t size = object->size;
+        const size_t n_size = size + 1;
+
+        Pair **pairs = alloc_arena(allocator,
+                                  sizeof(Pair*) * n_size);
+
+        memcpy(pairs,
+               object->pairs,
+               sizeof(Pair*) * size);
+
+        Pair *pair = alloc_arena(allocator,
+                                 sizeof(Pair));
+
+        pair->key = key;
+        pair->value = value;
+
+        pairs[size] = pair;
+
+        object->pairs = pairs;
+        object->size = n_size;
+    }
+    else
+    {
+        existing_kv_pair->value = value;
+    }
+}
+
+void json_pop_object(Object *object,
+                     char *key)
+{
+    size_t i;
+    Pair *existing_kv_pair = scan_object(object,
+                                         key,
+                                         &i);
+
+    if (existing_kv_pair)
+    {
+        const size_t n = object->size - 1 - i;
+
+        memmove(object->pairs + i,
+                object->pairs + i + 1,
+                sizeof(Pair*) * n);
+
+        object->size--;
+    }
+}
+
+
+JSON *json_make_array(void)
+{
+    JSON *json = NULL;
+
+    if (allocator)
+    {
+        json = alloc_arena(allocator,
+                           sizeof(JSON));
+
+        json->hint = HINT_ARRAY;
+
+        Array *array = alloc_arena(allocator,
+                                   sizeof(Array));
+
+        array->values = NULL;
+        array->size = 0;
+
+        json->type.a = array;
+    }
+
+    return json;
+}
+
+void json_push_array(Array *array,
+                     JSON *value)
+{
+    const size_t size = array->size;
+    const size_t n_size = size + 1;
+
+    JSON **values = alloc_arena(allocator,
+                                sizeof(JSON*) * n_size);
+
+    memcpy(values,
+           array->values,
+           sizeof(JSON*) * size);
+
+    values[size] = value;
+
+    array->values = values;
+    array->size = n_size;
+}
+
+void json_pop_array(Array *array,
+                    const size_t index)
+{
+    if (index < array->size)
+    {
+        const size_t n = array->size - 1 - index;
+
+        memmove(array->values + index,
+                array->values + index + 1,
+                sizeof(JSON*) * n);
+
+        array->size--;
+    }
+}
+
+
 void json_write(const char *path,
                 const JSON *value)
 {
@@ -117,11 +318,9 @@ void json_write(const char *path,
 
     assert(file);
 
-    assert(value->hint == HINT_OBJECT);
-
-    write_object(file,
-                 value->type.o,
-                 0);
+    write_value(file,
+                value,
+                0);
 
     fclose(file);
 }

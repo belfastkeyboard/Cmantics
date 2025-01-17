@@ -2,11 +2,9 @@
 
 #include <stdbool.h>
 #include <stddef.h>
-#include "arena.h"
 
 
-void handle_string(Arena *arena,
-                   char **src,
+void handle_string(char **src,
                    char *data,
                    size_t *offset);
 
