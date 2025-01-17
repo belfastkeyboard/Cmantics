@@ -47,11 +47,13 @@ Hint determine_digit(char *data,
     Hint type = HINT_INT;
 
     size_t len = strspn(data + offset,
-                        "-0123456789.");
+                        "+-0123456789.eE");
 
     for (int i = 0; i < len; i++)
     {
-        if (data[offset + i] == '.')
+        if (data[offset + i] == '.' ||
+            data[offset + i] == 'e' ||
+            data[offset + i] == 'E')
         {
             type = HINT_FLOAT;
 

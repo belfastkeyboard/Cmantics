@@ -67,9 +67,18 @@ static void write_int(FILE *file,
 static void write_float(FILE *file,
                         const double number)
 {
-    fprintf(file,
-            "%.2f",
-            number);
+    if (number == (int)number)
+    {
+        fprintf(file,
+                "%.1f",
+                number);
+    }
+    else
+    {
+        fprintf(file,
+                "%.10g",
+                number);
+    }
 }
 
 static void write_boolean(FILE *file,

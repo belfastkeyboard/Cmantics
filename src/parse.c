@@ -26,11 +26,11 @@ void handle_string(Arena *arena,
 int handle_integer(char *data,
                    size_t *offset)
 {
-    int result;
     char *ptr;
 
-    result = (int)strtol(data + *offset,
-                         &ptr, 10);
+    int result = (int)strtol(data + *offset,
+                             &ptr,
+                             10);
 
     *offset += ptr - (data + *offset);
 
@@ -41,11 +41,10 @@ int handle_integer(char *data,
 double handle_float(char *data,
                    size_t *offset)
 {
-    double result;
     char *ptr;
 
-    result = strtod(data + *offset,
-                    &ptr);
+    double result = strtod(data + *offset,
+                           &ptr);
 
     *offset += ptr - (data + *offset);
 
