@@ -40,7 +40,7 @@ json_close();
 ```c
 json_open();
 
-JSON *value = json_open("json_example.json");
+JSON *value = json_read("json_example.json");
 
 json_write("json_copy.json",
            value);
