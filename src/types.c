@@ -51,7 +51,7 @@ Hint determine_digit(char *data,
 
     for (int i = 0; i < len; i++)
     {
-        if (data[i] == '.')
+        if (data[offset + i] == '.')
         {
             type = HINT_FLOAT;
 

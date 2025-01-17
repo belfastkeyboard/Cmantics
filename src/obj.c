@@ -1,7 +1,5 @@
-#include <assert.h>
 #include <string.h>
 #include "../internals/arena.h"
-#include "../internals/error.h"
 #include "../internals/pair.h"
 #include "../internals/eval.h"
 #include "../internals/parse.h"
@@ -81,9 +79,12 @@ Object *make_object(Arena *arena,
     while (evaluation(data,
                       offset) != EVAL_FIN_OBJ)
     {
-        object->kv_pairs[object->pair_size] = make_pair(arena,
-                                                        data,
-                                                        offset);
+        Pair pair = make_pair(arena,
+                              data,
+                              offset);
+
+        object->kv_pairs[object->pair_size] = pair;
+
         object->pair_size++;
     }
 

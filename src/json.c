@@ -1,10 +1,8 @@
 #include <assert.h>
 #include <stdlib.h>
-#include <string.h>
+#include "../internals/write.h"
 #include "../internals/get.h"
-#include "../internals/arena.h"
 #include "../internals/eval.h"
-#include "../internals/obj.h"
 
 
 static Arena *allocator;
@@ -65,7 +63,8 @@ static Value *parse_json_file(FILE *file)
 
 Value *json_open(const char *path)
 {
-    FILE *file = fopen(path, "r");
+    FILE *file = fopen(path,
+                       "r");
 
     Value *value = parse_json_file(file);
 
@@ -107,4 +106,22 @@ Value *json_lookup(Value *value,
     }
 
     return result;
+}
+
+
+void json_write(const char *path,
+                const Value *value)
+{
+    FILE *file = fopen(path,
+                       "w");
+
+    assert(file);
+
+    assert(value->hint == HINT_OBJECT);
+
+    write_object(file,
+                 value->type.o,
+                 0);
+
+    fclose(file);
 }

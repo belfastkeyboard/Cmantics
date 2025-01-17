@@ -15,8 +15,8 @@ int handle_integer(char *data,
                    size_t *offset);
 
 
-float handle_float(char *data,
-                   size_t *offset);
+double handle_float(char *data,
+                    size_t *offset);
 
 
 bool handle_boolean(char *data,

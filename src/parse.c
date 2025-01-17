@@ -38,13 +38,13 @@ int handle_integer(char *data,
 }
 
 
-float handle_float(char *data,
+double handle_float(char *data,
                    size_t *offset)
 {
-    float result;
+    double result;
     char *ptr;
 
-    result = strtof(data + *offset,
+    result = strtod(data + *offset,
                     &ptr);
 
     *offset += ptr - (data + *offset);

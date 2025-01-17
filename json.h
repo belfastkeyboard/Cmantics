@@ -27,8 +27,8 @@ typedef union Type
 {
     void   *n;
     char   *s;
-    int     i;
-    float   f;
+    long    i;
+    double  f;
     bool    b;
     Object *o;
     Array  *a;
@@ -43,7 +43,7 @@ typedef struct Value
 
 
 __attribute__((warn_unused_result))
-Value *json_open(const char *file);
+Value *json_open(const char *path);
 
 void json_close(void);
 
@@ -52,3 +52,7 @@ Value *json_find(Value *value,
 
 Value *json_lookup(Value *value,
                    size_t index);
+
+
+void json_write(const char *path,
+                const Value *value);

@@ -69,6 +69,7 @@ Pair make_pair(Arena *arena,
     else if (hint == HINT_OBJECT)
     {
         (*offset)++;
+
         pair.value.type.o = make_object(arena,
                                         data,
                                         offset);
