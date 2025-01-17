@@ -6,7 +6,7 @@
 typedef struct Array
 {
     size_t size;
-    Value **values;
+    JSON **values;
 } Array;
 
 

@@ -4,10 +4,10 @@
 #include "../internals/get.h"
 
 
-Value *scan_object(const Object *object,
-                   const char *key)
+JSON *scan_object(const Object *object,
+                  const char *key)
 {
-    Value *result = NULL;
+    JSON *result = NULL;
 
     for (int i = 0; i < object->pair_size && !result; i++)
     {
@@ -23,10 +23,10 @@ Value *scan_object(const Object *object,
     return result;
 }
 
-Value *lookup_array(const Array *array,
-                    size_t index)
+JSON *lookup_array(const Array *array,
+                   size_t index)
 {
-    Value *result = NULL;
+    JSON *result = NULL;
 
     if (index < array->size)
     {

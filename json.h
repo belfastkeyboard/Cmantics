@@ -35,24 +35,24 @@ typedef union Type
 } Type;
 
 
-typedef struct Value
+typedef struct JSON
 {
     Hint hint;
     Type type;
-} Value;
+} JSON;
 
 
 __attribute__((warn_unused_result))
-Value *json_open(const char *path);
+JSON *json_open(const char *path);
 
 void json_close(void);
 
-Value *json_find(Value *value,
-                 const char *key);
+JSON *json_find(JSON *value,
+                const char *key);
 
-Value *json_lookup(Value *value,
-                   size_t index);
+JSON *json_lookup(JSON *value,
+                  size_t index);
 
 
 void json_write(const char *path,
-                const Value *value);
+                const JSON *value);

@@ -3,7 +3,6 @@
 #include "../internals/pair.h"
 #include "../internals/eval.h"
 #include "../internals/parse.h"
-#include "../internals/array.h"
 #include "../internals/obj.h"
 
 

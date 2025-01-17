@@ -5,25 +5,25 @@ Simple interface for using the JSON file format in C.
 ## EXAMPLES
 ### READ FROM FILE
 ```c
-Value *json = json_open("json_example.json");
+JSON *json = json_open("json_example.json");
 
-Value *courses = json_find(json,
-                           "courses");
+json = json_find(json,
+                 "courses");
 
-Value *course = json_lookup(courses,
-                            0);
+json = json_lookup(courses,
+                   0);
 
-Value *course_id = json_find(course,
-                             "course_id");
+JSON *course_id = json_find(course,
+                            "course_id");
 
-Value *course_name = json_find(course,
-                               "course_name");
+JSON *course_name = json_find(course,
+                              "course_name");
 
-Value *credits = json_find(course,
-                           "credits");
+JSON *credits = json_find(course,
+                          "credits");
 
-Value *grade = json_find(course,
-                         "grade");
+JSON *grade = json_find(course,
+                        "grade");
 
 printf("\nCourse: {\n\tcourse_id: %s,\n\tcourse_name: %s,\n\tcredits: %d,\n\tgrade: %s\n};\n",
        course_id->type.s,
@@ -36,7 +36,7 @@ json_close();
 
 ### WRITE TO FILE
 ```c
-Value *value = json_open("json_example.json");
+JSON *value = json_open("json_example.json");
 
 json_write("json_copy.json",
            value);
@@ -44,14 +44,14 @@ json_write("json_copy.json",
 json_close();
 ```
 
-The ```Value``` struct contains a type hint and the relevant data:
+The ```JSON``` struct contains a type hint and the relevant data:
 
 ```c
-typedef struct Value
+typedef struct JSON
 {
     Hint hint;
     Type type;
-} Value;
+} JSON;
 ```
 
 ```Hint``` is an enum type which indicates the correct type contained in the ```Type``` value.
@@ -83,9 +83,9 @@ Array *array;
 ```Object``` and ```Array``` are opaque types.
 
 To retrieve data from an ```Object``` call the ```json_find()``` function and provide a key. 
-If successful returns valid ```Value*``` else returns ```NULL```.
+If successful returns valid ```JSON*``` else returns ```NULL```.
 
 To retrieve data from an ```Array``` call the ```json_lookup()``` function and provide an index.
-If successful returns valid ```Value*``` else returns ```NULL```.
+If successful returns valid ```JSON*``` else returns ```NULL```.
 
-When writing ```Value*``` to file with ```json_write()``` note that ```Value*``` must be of type ```Object*```.
+When writing ```JSON*``` to file with ```json_write()``` note that ```JSON*``` must be of type ```Object*```.

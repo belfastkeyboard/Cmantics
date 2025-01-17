@@ -73,7 +73,7 @@ Array *make_array(Arena *arena,
                               *offset);
 
     array->values = alloc_arena(arena,
-                                sizeof(Value) * array->size);
+                                sizeof(JSON) * array->size);
 
     *offset += strspn(data + *offset,
                       " \n");
@@ -142,8 +142,8 @@ Array *make_array(Arena *arena,
                                   offset);
         }
 
-        Value *value = alloc_arena(arena,
-                                   sizeof(Value));
+        JSON *value = alloc_arena(arena,
+                                   sizeof(JSON));
 
         value->hint = hint;
         value->type = type;

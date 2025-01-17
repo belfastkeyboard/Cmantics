@@ -25,7 +25,7 @@ static size_t get_file_size(FILE *file)
 }
 
 
-static Value *parse_json_file(FILE *file)
+static JSON *parse_json_file(FILE *file)
 {
     assert(file);
 
@@ -47,8 +47,8 @@ static Value *parse_json_file(FILE *file)
 
     assert(eval == EVAL_MAKE_OBJ);
 
-    Value *value = alloc_arena(allocator,
-                               sizeof(Value));
+    JSON *value = alloc_arena(allocator,
+                               sizeof(JSON));
 
     value->hint = HINT_OBJECT,
     value->type.o = make_object(allocator,
@@ -61,12 +61,12 @@ static Value *parse_json_file(FILE *file)
 }
 
 
-Value *json_open(const char *path)
+JSON *json_open(const char *path)
 {
     FILE *file = fopen(path,
                        "r");
 
-    Value *value = parse_json_file(file);
+    JSON *value = parse_json_file(file);
 
     fclose(file);
 
@@ -80,10 +80,10 @@ void json_close(void)
 }
 
 
-Value *json_find(Value *value,
-                 const char *key)
+JSON *json_find(JSON *value,
+                const char *key)
 {
-    Value *result = NULL;
+    JSON *result = NULL;
 
     if (value->hint == HINT_OBJECT)
     {
@@ -94,10 +94,10 @@ Value *json_find(Value *value,
     return result;
 }
 
-Value *json_lookup(Value *value,
-                   size_t index)
+JSON *json_lookup(JSON *value,
+                  size_t index)
 {
-    Value *result = NULL;
+    JSON *result = NULL;
 
     if (value->hint == HINT_ARRAY)
     {
@@ -110,7 +110,7 @@ Value *json_lookup(Value *value,
 
 
 void json_write(const char *path,
-                const Value *value)
+                const JSON *value)
 {
     FILE *file = fopen(path,
                        "w");

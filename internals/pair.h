@@ -9,7 +9,7 @@ typedef char *Key;
 typedef struct Pair
 {
     Key key;
-    Value value;
+    JSON value;
 } Pair;
 
 

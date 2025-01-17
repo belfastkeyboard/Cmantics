@@ -85,7 +85,7 @@ static void write_boolean(FILE *file,
 
 
 static void write_value(FILE *file,
-                        const Value *value,
+                        const JSON *value,
                         const int indentation)
 {
     switch (value->hint)
@@ -134,7 +134,7 @@ void write_array(FILE *file,
 
     for (size_t i = 0; i < array->size; ++i)
     {
-        Value *value = array->values[i];
+        JSON *value = array->values[i];
 
         if (value->hint == HINT_OBJECT)
         {
