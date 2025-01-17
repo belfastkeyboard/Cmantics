@@ -1,9 +1,9 @@
 # JSON Parsing For C
 
-Simple interface for reading from JSON files.
+Simple interface for using the JSON file format in C.
 
-Example:
-
+## EXAMPLES
+### READ FROM FILE
 ```c
 Value *json = json_open("json_example.json");
 
@@ -30,6 +30,16 @@ printf("\nCourse: {\n\tcourse_id: %s,\n\tcourse_name: %s,\n\tcredits: %d,\n\tgra
        course_name->type.s,
        credits->type.i,
        grade->type.s);
+
+json_close();
+```
+
+### WRITE TO FILE
+```c
+Value *value = json_open("json_example.json");
+
+json_write("json_copy.json",
+           value);
 
 json_close();
 ```
@@ -77,3 +87,5 @@ If successful returns valid ```Value*``` else returns ```NULL```.
 
 To retrieve data from an ```Array``` call the ```json_lookup()``` function and provide an index.
 If successful returns valid ```Value*``` else returns ```NULL```.
+
+When writing ```Value*``` to file with ```json_write()``` note that ```Value*``` must be of type ```Object*```.
