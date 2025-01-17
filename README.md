@@ -144,3 +144,11 @@ The value will be inserted at the back of the array.
 Remove an element from an array with ```json_pop_object()``` and provide an index.
 If the index is valid, the element will be removed. 
 If the index is not valid, the object will not be modified.
+
+All other values can be modified in place, e.g.:
+```c
+JSON *val = json_read("example.json");
+
+val.hint = HINT_INT;
+val.type.i = 45;
+```
