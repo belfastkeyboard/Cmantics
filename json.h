@@ -42,9 +42,7 @@ typedef struct JSON
 } JSON;
 
 
-
-__attribute__((warn_unused_result))
-JSON *json_open(const char *path);
+void json_open(void);
 
 void json_close(void);
 
@@ -78,6 +76,9 @@ void json_push_array(Array *array,
 void json_pop_array(Array *array,
                     size_t index);
 
+
+__attribute__((warn_unused_result))
+JSON *json_read(const char *path);
 
 void json_write(const char *path,
                 const JSON *value);

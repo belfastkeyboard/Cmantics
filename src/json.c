@@ -35,8 +35,6 @@ static JSON *parse_json_file(FILE *file)
     size_t offset = 0;
     size_t fsize = get_file_size(file);
 
-    allocator = create_arena(fsize * 2);
-
     char *fdata = calloc(sizeof(char),
                          fsize + 1);
 
@@ -54,28 +52,9 @@ static JSON *parse_json_file(FILE *file)
 }
 
 
-JSON *json_open(const char *path)
+void json_open(void)
 {
-    JSON *json = NULL;
-
-    if (is_json_file(path))
-    {
-        FILE *file = fopen(path,
-                           "r");
-
-        if (file)
-        {
-            json = parse_json_file(file);
-
-            fclose(file);
-        }
-    }
-    else
-    {
-        errno = EINVAL;
-    }
-
-    return json;
+    allocator = create_arena(4096);
 }
 
 
@@ -309,6 +288,30 @@ void json_pop_array(Array *array,
     }
 }
 
+
+JSON *json_read(const char *path)
+{
+    JSON *json = NULL;
+
+    if (is_json_file(path))
+    {
+        FILE *file = fopen(path,
+                           "r");
+
+        if (file)
+        {
+            json = parse_json_file(file);
+
+            fclose(file);
+        }
+    }
+    else
+    {
+        errno = EINVAL;
+    }
+
+    return json;
+}
 
 void json_write(const char *path,
                 const JSON *value)
