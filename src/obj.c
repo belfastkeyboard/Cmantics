@@ -75,7 +75,7 @@ Object *make_object(char *data,
                                         offset);
 
     object->pairs = alloc_arena(allocator,
-                                   sizeof(Pair) * child_count);
+                                sizeof(Pair) * child_count);
 
     while (evaluation(data,
                       offset) != EVAL_FIN_OBJ)
