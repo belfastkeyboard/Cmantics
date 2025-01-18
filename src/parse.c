@@ -13,16 +13,18 @@ void handle_string(char **src,
                    size_t *offset)
 {
     size_t len = strcspn(data + *offset,
-                         "\"") + 1;
+                         "\"");
 
     *src = alloc_arena(allocator,
-                       len);
+                       len + 1);
 
     strncpy(*src,
             data + *offset,
-            len - 1);
+            len);
 
-    *offset += len;
+    (*src)[len] = '\0';
+
+    *offset += len + 1;
 }
 
 
