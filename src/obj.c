@@ -74,6 +74,7 @@ Object *make_object(char *data,
     size_t child_count = count_children(data,
                                         offset);
 
+    object->size = 0;
     object->pairs = alloc_arena(allocator,
                                 sizeof(Pair) * child_count);
 
