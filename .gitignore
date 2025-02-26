@@ -1,2 +1,6 @@
 .idea/
 cmake-build-debug/
+
+main.c
+*.json
+*.ini
