@@ -2,9 +2,7 @@
 #include <string.h>
 #include "../internals/array.h"
 #include "../internals/obj.h"
-#include "../internals/parse.h"
 #include "../internals/value.h"
-#include "../internals/json.h"
 
 
 Array *create_array(Arena *arena)
@@ -21,40 +19,44 @@ void destroy_array(Array *array)
 }
 
 
-Array *make_array(JSON *json)
+Array *make_array(Array *meta,
+                  Arena *arena)
 {
-    Array *array = create_array(json->arena);
+    Array *array = create_array(arena);
 
     Hint hint = JSON_ARRAY;
     Type type = {
         .a = array
     };
 
-    Value *value = make_value(json->arena,
+    Value *value = make_value(arena,
                               hint,
                               type);
 
-    push_array(json->meta,
+    push_array(meta,
                value);
 
     return array;
 }
 
 
-Array *parse_array(JSON *json,
-                   char *data,
-                   size_t *offset)
+Array *parse_array(char *data,
+                   size_t *offset,
+                   Array *meta,
+                   Arena *arena)
 {
-    Array *array = make_array(json);
+    Array *array = make_array(meta,
+                              arena);
 
     *offset += strspn(data + *offset,
                       " \n");
 
     while (data[*offset] != ']')
     {
-        Value *value = parse_value(json,
-                                   data,
-                                   offset);
+        Value *value = parse_value(data,
+                                   offset,
+                                   meta,
+                                   arena);
 
         push_array(array,
                    value);

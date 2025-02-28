@@ -15,15 +15,17 @@ typedef struct Array
 
 Array *create_array(Arena *arena);
 
-
-Array *make_array(JSON *json);
-
 void destroy_array(Array *array);
 
 
-Array *parse_array(JSON *json,
-                   char *data,
-                   size_t *offset);
+Array *make_array(Array *meta,
+                  Arena *arena);
+
+
+Array *parse_array(char *data,
+                   size_t *offset,
+                   Array *meta,
+                   Arena *arena);
 
 
 void push_array(Array *array,

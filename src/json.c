@@ -1,14 +1,18 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "../internals/symbols.h"
 #include "../internals/array.h"
-#include "../internals/eval.h"
-#include "../internals/get.h"
 #include "../internals/write.h"
 #include "../internals/value.h"
-#include "../internals/json.h"
 #include "../internals/error.h"
+
+
+typedef struct JSON
+{
+    Arena *arena;
+    Array *meta;
+    Value *value;
+} JSON;
 
 
 static size_t get_file_size(FILE *file)
@@ -30,7 +34,7 @@ static size_t get_file_size(FILE *file)
 
 JSON *create_json(void)
 {
-    Arena *arena = create_arena(KB(4));
+    Arena *arena = create_arena();
 
     JSON *json = alloc_arena(arena,
                              sizeof(JSON));
@@ -152,11 +156,13 @@ Value *make_json(JSON* json,
     }
     else if (hint == JSON_ARRAY)
     {
-        value->type.a = make_array(json);
+        value->type.a = make_array(json->meta,
+                                   json->arena);
     }
     else if (hint == JSON_OBJECT)
     {
-        value->type.o = make_object(json);
+        value->type.o = make_object(json->meta,
+                                    json->arena);
     }
     else
     {
@@ -231,214 +237,6 @@ size_t count_json(Value* container)
     return result;
 }
 
-/*
-JSON *json_find(JSON *value,
-                const char *key)
-{
-    JSON *result = NULL;
-
-    if (value->hint == JSON_OBJECT)
-    {
-        size_t i;
-        Pair *pair = scan_object(value->type.o,
-                                 key,
-                                 &i);
-
-        if (pair)
-        {
-            result = pair->value;
-        }
-    }
-
-    return result;
-}
-
-
-JSON *json_make_value(const Hint hint,
-                      void *type)
-{
-
-    JSON *json = NULL;
-
-    if (hint != JSON_OBJECT &&
-        hint != JSON_ARRAY)
-    {
-        json = alloc_arena(allocator,
-                           sizeof(JSON));
-
-        json->hint = hint;
-    }
-
-    switch (hint)
-    {
-        case JSON_INT:
-            json->type.i = *(int*)type;
-            break;
-        case JSON_FLOAT:
-            json->type.f = *(float*)type;
-            break;
-        case JSON_NULL:
-            json->type.n = NULL;
-            break;
-        case JSON_BOOL:
-            json->type.b = *(bool*)type;
-            break;
-        case JSON_STRING:
-            json->type.s = (char*)type;
-            break;
-        case JSON_ARRAY:
-            json = json_make_array();
-            break;
-        case JSON_OBJECT:
-            json = json_make_object();
-            break;
-        default:
-            break;
-    }
-
-    return json;
-}
-
-
-JSON *json_make_object(void)
-{
-    JSON *json = NULL;
-
-    if (allocator)
-    {
-        json = alloc_arena(allocator,
-                           sizeof(JSON));
-
-        json->hint = JSON_OBJECT;
-
-        Object *object = alloc_arena(allocator,
-                                     sizeof(Object));
-
-        object->pairs = NULL;
-        object->size = 0;
-
-        json->type.o = object;
-    }
-
-    return json;
-}
-
-void json_push_object(Object *object,
-                      char *key,
-                      JSON *value)
-{
-    size_t i;
-    Pair *existing_kv_pair = scan_object(object,
-                                         key,
-                                         &i);
-
-    if (!existing_kv_pair)
-    {
-        const size_t size = object->size;
-        const size_t n_size = size + 1;
-
-        Pair **pairs = alloc_arena(allocator,
-                                  sizeof(Pair*) * n_size);
-
-        memcpy(pairs,
-               object->pairs,
-               sizeof(Pair*) * size);
-
-        Pair *pair = alloc_arena(allocator,
-                                 sizeof(Pair));
-
-        pair->key = key;
-        pair->value = value;
-
-        pairs[size] = pair;
-
-        object->pairs = pairs;
-        object->size = n_size;
-    }
-    else
-    {
-        existing_kv_pair->value = value;
-    }
-}
-
-void json_pop_object(Object *object,
-                     char *key)
-{
-    size_t i;
-    Pair *existing_kv_pair = scan_object(object,
-                                         key,
-                                         &i);
-
-    if (existing_kv_pair)
-    {
-        const size_t n = object->size - 1 - i;
-
-        memmove(object->pairs + i,
-                object->pairs + i + 1,
-                sizeof(Pair*) * n);
-
-        object->size--;
-    }
-}
-
-
-JSON *json_make_array(void)
-{
-    JSON *json = NULL;
-
-    if (allocator)
-    {
-        json = alloc_arena(allocator,
-                           sizeof(JSON));
-
-        json->hint = JSON_ARRAY;
-
-        Array *array = alloc_arena(allocator,
-                                   sizeof(Array));
-
-        array->values = NULL;
-        array->size = 0;
-
-        json->type.a = array;
-    }
-
-    return json;
-}
-
-void json_push_array(Array *array,
-                     JSON *value)
-{
-    const size_t size = array->size;
-    const size_t n_size = size + 1;
-
-    JSON **values = alloc_arena(allocator,
-                                sizeof(JSON*) * n_size);
-
-    memcpy(values,
-           array->values,
-           sizeof(JSON*) * size);
-
-    values[size] = value;
-
-    array->values = values;
-    array->size = n_size;
-}
-
-void json_pop_array(Array *array,
-                    const size_t index)
-{
-    if (index < array->size)
-    {
-        const size_t n = array->size - 1 - index;
-
-        memmove(array->values + index,
-                array->values + index + 1,
-                sizeof(JSON*) * n);
-
-        array->size--;
-    }
-}
-*/
 
 void parse_json(JSON *json,
                 const char *path)
@@ -459,9 +257,10 @@ void parse_json(JSON *json,
               fsize,
               file);
 
-        Value *value = parse_value(json,
-                                   fdata,
-                                   &offset);
+        Value *value = parse_value(fdata,
+                                   &offset,
+                                   json->meta,
+                                   json->arena);
 
         json->value = value;
 

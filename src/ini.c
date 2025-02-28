@@ -2,9 +2,8 @@
 #include <stddef.h>
 #include <string.h>
 #include "../internals/arena.h"
-#include "../internals/make.h"
+#include "../internals/str.h"
 #include "../internals/dict.h"
-#include "../internals/symbols.h"
 #include "../ini.h"
 
 
@@ -124,7 +123,7 @@ static struct HeaderNode *parse_header(FILE *file,
 
 INI *create_ini(void)
 {
-    Arena *arena = create_arena(PAGE_SIZE);
+    Arena *arena = create_arena();
 
     INI *ini = alloc_arena(arena,
                            sizeof(INI));

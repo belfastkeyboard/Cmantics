@@ -8,6 +8,7 @@ Value *make_value(Arena *arena,
                   Type type);
 
 
-Value *parse_value(JSON *json,
-                   char *data,
-                   size_t *offset);
+Value *parse_value(char *data,
+                   size_t *offset,
+                   Array *meta,
+                   Arena *arena);

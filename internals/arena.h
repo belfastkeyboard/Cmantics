@@ -7,7 +7,7 @@ typedef struct Arena Arena;
 
 
 __attribute__((warn_unused_result))
-Arena *create_arena(size_t size);
+Arena *create_arena(void);
 
 void destroy_arena(Arena **arena);
 

@@ -11,9 +11,11 @@ typedef struct Object {
 } Object;
 
 
-Object *make_object(JSON *json);
+Object *make_object(Array *meta,
+                    Arena *arena);
 
 
-Object *parse_object(JSON *json,
-                     char *data,
-                     size_t *offset);
+Object *parse_object(char *data,
+                     size_t *offset,
+                     Array *meta,
+                     Arena *arena);

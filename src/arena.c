@@ -4,6 +4,10 @@
 #include "../internals/arena.h"
 
 
+#define KB(x)     (x * 1024)
+#define PAGE_SIZE KB(4)
+
+
 struct Page
 {
     struct Page *prev;
@@ -73,13 +77,13 @@ static void *arena_alloc(struct Page **curr,
 }
 
 
-Arena *create_arena(const size_t size)
+Arena *create_arena()
 {
     Arena *arena = malloc(sizeof(Arena));
 
     arena->curr = construct_page(NULL,
                                  1,
-                                 size);
+                                 PAGE_SIZE);
 
     return arena;
 }

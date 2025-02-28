@@ -1,105 +1,86 @@
 #include <string.h>
 #include "../internals/arena.h"
+#include "../internals/array.h"
 #include "../internals/pair.h"
-#include "../internals/eval.h"
-#include "../internals/parse.h"
 #include "../internals/obj.h"
-#include "../internals/json.h"
 #include "../internals/value.h"
 
 
-static size_t count_children(char *data,
-                             const size_t *offset)
+enum Eval
 {
-    char *cpy = data + *offset;
-    size_t count = 0;
+    EVAL_ERROR,
+    EVAL_FIN_OBJ,
+    EVAL_MAKE_PAIR
+};
 
-    size_t pos = strspn(cpy,
-                        " \n");
 
-    if (cpy[pos] != '}')
+static enum Eval evaluation(const char *data,
+                            size_t *offset)
+{
+    enum Eval eval;
+    *offset += strcspn(data + *offset,
+                       "{}[]\"");
+
+    char c = *(data + *offset);
+    switch (c)
     {
-        size_t depth = 0;
-        size_t len = strlen(cpy);
-        bool in_string = false;
-
-        for (size_t i = pos; i < len; i++)
-        {
-            char c = cpy[i];
-
-            if (!in_string &&
-                c == ':' &&
-                depth == 0)
-            {
-                count++;
-            }
-            else if (!in_string &&
-                     c == '{' ||
-                     c == '[')
-            {
-                depth++;
-            }
-            else if (!in_string &&
-                     depth > 0 &&
-                     (c == '}' ||
-                     c == ']'))
-            {
-                depth--;
-            }
-            else if (depth == 0 &&
-                     c == '"')
-            {
-                in_string = !in_string;
-            }
-            else if (!in_string &&
-                     depth == 0 &&
-                     c == '}')
-            {
-                break;
-            }
-        }
+        case '}':
+            eval = EVAL_FIN_OBJ;
+            break;
+        case '"':
+            eval = EVAL_MAKE_PAIR;
+            break;
+        default:
+            eval = EVAL_ERROR;
+            break;
     }
 
-    return count;
+    (*offset)++;
+
+    return eval;
 }
 
 
-Object *make_object(JSON *json)
+Object *make_object(Array *meta,
+                    Arena *arena)
 {
-    Object *object = alloc_arena(json->arena,
+    Object *object = alloc_arena(arena,
                                  sizeof(Object));
 
-    object->dict = create_dict(json->arena);
+    object->dict = create_dict(arena);
 
     Hint hint = JSON_OBJECT;
     Type type = {
         .o = object
     };
 
-    Value *value = make_value(json->arena,
+    Value *value = make_value(arena,
                               hint,
                               type);
 
-    push_array(json->meta,
+    push_array(meta,
                value);
 
     return object;
 }
 
 
-Object *parse_object(JSON *json,
-                     char *data,
-                     size_t *offset)
+Object *parse_object(char *data,
+                     size_t *offset,
+                     Array *meta,
+                     Arena *arena)
 {
 
-    Object *object = make_object(json);
+    Object *object = make_object(meta,
+                                 arena);
 
     while (evaluation(data,
                       offset) != EVAL_FIN_OBJ)
     {
-        struct DictPair pair = parse_pair(json,
-                                          data,
-                                          offset);
+        struct DictPair pair = parse_pair(data,
+                                          offset,
+                                          meta,
+                                          arena);
 
         insert_dict(object->dict,
                     pair.key,

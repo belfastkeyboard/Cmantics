@@ -5,6 +5,7 @@
 #include "../internals/dict.h"
 
 
-struct DictPair parse_pair(JSON *json,
-                           char *data,
-                           size_t *offset);
+struct DictPair parse_pair(char *data,
+                           size_t *offset,
+                           Array *meta,
+                           Arena *arena);
