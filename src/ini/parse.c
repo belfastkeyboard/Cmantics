@@ -94,43 +94,29 @@ static HintINI determine_type(const char *line)
 
     if (hint == INI_STRING)
     {
-        // null
-        bool no_characters = length == 0;
-
-        // boolean
-        bool boolean = strcasecmp(line,
-                                  "no") == 0 ||
-                       strcasecmp(line,
-                                  "on") == 0 ||
-                       strcasecmp(line,
-                                  "yes") == 0 ||
-                       strcasecmp(line,
-                                  "off") == 0 ||
-                       strcasecmp(line,
-                                  "true") == 0 ||
-                       strcasecmp(line,
-                                  "false") == 0;
-
-        // quotation type string
-        bool string_with_quotation = line[0] == '"' ||
-                                     line[0] == '\'';
-
-        // arrays
-        bool array = !string_with_quotation &&
-                     strcspn(line,
-                             ",") != length;
-
-        if (boolean)
+        if (length == 0)
+        {
+            hint = INI_NULL;
+        }
+        else if (strcasecmp(line,
+                            "no") == 0 ||
+                 strcasecmp(line,
+                            "on") == 0 ||
+                 strcasecmp(line,
+                            "yes") == 0 ||
+                 strcasecmp(line,
+                            "off") == 0 ||
+                 strcasecmp(line,
+                            "true") == 0 ||
+                 strcasecmp(line,
+                            "false") == 0)
         {
             hint = INI_BOOL;
         }
-        else if (array)
+        else if (strcspn(line,
+                         ",") != length)
         {
             hint = INI_ARRAY;
-        }
-        else if (no_characters)
-        {
-            hint = INI_NULL;
         }
     }
 
@@ -250,9 +236,8 @@ ValueINI *parse_value_ini(char *line,
                           Array *meta,
                           Arena *arena)
 {
-    HintINI hint = determine_type(line);
-
     TypeINI type;
+    HintINI hint = determine_type(line);
 
     if (hint == INI_STRING)
     {
@@ -280,23 +265,8 @@ ValueINI *parse_value_ini(char *line,
     }
     else
     {
-        type.i = 0;
-    }/*
-    else if (hint == INI_NULL)
-    {
-        hint = hint;
-        type.n = handle_null(data,
-                             offset);
+        type.n = NULL;
     }
-    else
-    {
-        throw(__FILE__,
-              __FUNCTION__,
-              __LINE__,
-              "Error hint type: %d",
-              hint);
-    }
-*/
 
     ValueINI *value = make_value_ini(arena,
                                      hint,
