@@ -1,5 +1,5 @@
 #include <string.h>
-#include "../internals/str.h"
+#include "../internals/arena.h"
 
 
 char *make_string(const char *src,
@@ -16,24 +16,3 @@ char *make_string(const char *src,
 
     return string;
 }
-
-
-char *handle_string(char *data,
-                    size_t *offset,
-                    Arena *arena)
-{
-    const size_t len = strcspn(data + *offset,
-                               "\"");
-
-    char *string = calloc_arena(arena,
-                                len + 1);
-
-    strncpy(string,
-            data + *offset,
-            len);
-
-    *offset += len + 1;
-
-    return string;
-}
-

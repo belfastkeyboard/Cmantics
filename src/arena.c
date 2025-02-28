@@ -1,7 +1,6 @@
 #include <assert.h>
 #include <malloc.h>
 #include <memory.h>
-#include "../internals/arena.h"
 
 
 #define KB(x)     (x * 1024)

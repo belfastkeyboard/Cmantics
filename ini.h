@@ -1,12 +1,14 @@
 #pragma once
 
 #include <stdbool.h>
+#include "internals/boolean.h"
 
 
+typedef struct Array Array;
 typedef struct INI INI;
 
 
-typedef enum Hint
+typedef enum HintINI
 {
     INI_ERROR,
     INI_NULL,
@@ -15,17 +17,25 @@ typedef enum Hint
     INI_FLOAT,
     INI_BOOL,
     INI_ARRAY
-} Hint;
+} HintINI;
 
 
-typedef union Type
+typedef union TypeINI
 {
-    void   *n;
-    char   *s;
-    long    i;
-    double  f;
-    bool    b;
-} Type;
+    void    *n;
+    char    *s;
+    long     i;
+    double   f;
+    Boolean  b;
+    Array   *a;
+} TypeINI;
+
+
+typedef struct ValueINI
+{
+    HintINI hint;
+    TypeINI type;
+} ValueINI;
 
 
 INI *create_ini(void);

@@ -1,8 +1,7 @@
 #include <malloc.h>
-#include <string.h>
-#include "../internals/array.h"
-#include "../internals/obj.h"
-#include "../internals/value.h"
+#include <memory.h>
+#include "../internals/json/obj.h"
+#include "../internals/json/value.h"
 
 
 Array *create_array(Arena *arena)
@@ -24,49 +23,17 @@ Array *make_array(Array *meta,
 {
     Array *array = create_array(arena);
 
-    Hint hint = JSON_ARRAY;
-    Type type = {
+    HintJSON hint = JSON_ARRAY;
+    TypeJSON type = {
         .a = array
     };
 
-    Value *value = make_value(arena,
-                              hint,
-                              type);
+    ValueJSON *value = make_value_json(arena,
+                                       hint,
+                                       type);
 
     push_array(meta,
                value);
-
-    return array;
-}
-
-
-Array *parse_array(char *data,
-                   size_t *offset,
-                   Array *meta,
-                   Arena *arena)
-{
-    Array *array = make_array(meta,
-                              arena);
-
-    *offset += strspn(data + *offset,
-                      " \n");
-
-    while (data[*offset] != ']')
-    {
-        Value *value = parse_value(data,
-                                   offset,
-                                   meta,
-                                   arena);
-
-        push_array(array,
-                   value);
-
-        *offset += strspn(data + *offset,
-                          ", \n");
-    }
-
-    *offset += strspn(data + *offset,
-                      "]") + 1;
 
     return array;
 }
@@ -77,8 +44,8 @@ void resize_array(Array *array)
     const size_t new_cap = (array->capacity) ? array->capacity * 2 :
                                                1;
 
-    Value **values = realloc(array->values,
-                             new_cap * sizeof(Value));
+    void **values = realloc(array->values,
+                            new_cap * sizeof(void*));
 
     if (values)
     {
@@ -88,7 +55,7 @@ void resize_array(Array *array)
 }
 
 void push_array(Array *array,
-                Value *value)
+                void *value)
 {
     if (array->nmemb >= array->capacity)
     {
@@ -105,10 +72,10 @@ void pop_array(Array *array,
     if (array->nmemb &&
         index < array->nmemb)
     {
+        memmove(&array->values[index],
+                &array->values[index + 1],
+                (array->nmemb - index - 1) * sizeof(void *));
+
         array->nmemb--;
-
-        Value *last = array->values[array->nmemb];
-
-        array->values[index] = last;
     }
 }

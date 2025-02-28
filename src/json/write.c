@@ -1,7 +1,7 @@
 #include <memory.h>
 #include <stdio.h>
-#include "../internals/array.h"
-#include "../internals/write.h"
+#include "../../internals/json/obj.h"
+#include "../../internals/json/write.h"
 
 
 #define INDENTATION_AMOUNT 4
@@ -82,28 +82,25 @@ static void write_float(FILE *file,
 }
 
 static void write_boolean(FILE *file,
-                          const bool boolean)
+                          const char *boolean)
 {
-    const char *string = (boolean) ? "true" :
-                                     "false";
-
     fprintf(file,
             "%s",
-            string);
+            boolean);
 }
 
 
-void write_array(FILE *file,
-                 const Array *array,
-                 const int indentation,
-                 Arena *arena)
+static void write_array(FILE *file,
+                        const Array *array,
+                        const int indentation,
+                        Arena *arena)
 {
     fputc('[',
           file);
 
     for (size_t i = 0; i < array->nmemb; ++i)
     {
-        Value *value = array->values[i];
+        ValueJSON *value = array->values[i];
 
         if (value->hint == JSON_OBJECT)
         {
@@ -124,7 +121,7 @@ void write_array(FILE *file,
     }
 
     if (array->nmemb &&
-        array->values[array->nmemb - 1]->hint == JSON_OBJECT)
+        ((ValueJSON*)(array->values[array->nmemb - 1]))->hint == JSON_OBJECT)
     {
         write_new_line(file,
                        indentation);
@@ -191,7 +188,7 @@ static void write_object(FILE *file,
 
 
 void write_value(FILE *file,
-                 const Value *value,
+                 const ValueJSON *value,
                  const int indentation,
                  Arena *arena)
 {
@@ -226,7 +223,7 @@ void write_value(FILE *file,
             break;
         case JSON_BOOL:
             write_boolean(file,
-                          value->type.b);
+                          value->type.b.string);
             break;
         default:
             break;

@@ -2,6 +2,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include "internals/boolean.h"
 
 
 typedef struct Object Object;
@@ -9,7 +10,7 @@ typedef struct Array Array;
 typedef struct JSON JSON;
 
 
-typedef enum Hint
+typedef enum HintJSON
 {
     JSON_INT,
     JSON_FLOAT,
@@ -19,24 +20,24 @@ typedef enum Hint
     JSON_ARRAY,
     JSON_OBJECT,
     JSON_ERROR
-} Hint;
+} HintJSON;
 
-typedef union Type
+typedef union TypeJSON
 {
-    void   *n;
-    char   *s;
+    void    *n;
+    char    *s;
     long    i;
     double  f;
-    bool    b;
-    Object *o;
-    Array  *a;
-} Type;
+    Boolean b;
+    Object  *o;
+    Array   *a;
+} TypeJSON;
 
 typedef struct Value
 {
-    Hint hint;
-    Type type;
-} Value;
+    HintJSON hint;
+    TypeJSON type;
+} ValueJSON;
 
 
 JSON *create_json(void);
@@ -44,54 +45,35 @@ JSON *create_json(void);
 void destroy_json(JSON **json);
 
 
-Value *get_json(JSON *json);
+ValueJSON *get_json(JSON *json);
 
-Value *lookup_json(Value *object,
-                   const char *key);
+ValueJSON *lookup_json(ValueJSON *object,
+                       const char *key);
 
-Value *scan_json(Value *array,
-                 size_t index);
-
-
-Value *make_json(JSON* json,
-                 Hint hint);
+ValueJSON *scan_json(ValueJSON *array,
+                     size_t index);
 
 
-void push_json(Value *array,
-               Value *value);
-
-void pop_json(Value *array,
-               size_t index);
+ValueJSON *make_json(JSON* json,
+                     HintJSON hint);
 
 
-void insert_json(Value *object,
+void push_json(ValueJSON *array,
+               ValueJSON *value);
+
+void pop_json(ValueJSON *array,
+              size_t index);
+
+
+void insert_json(ValueJSON *object,
                  const char *key,
-                 Value *value);
+                 ValueJSON *value);
 
-void erase_json(Value *object,
+void erase_json(ValueJSON *object,
                 const char *key);
 
 
-size_t count_json(Value* container);
-
-
-//JSON *json_make_object(void);
-//
-//void json_push_object(Object *object,
-//                      char *key,
-//                      JSON *value);
-//
-//void json_pop_object(Object *object,
-//                     char *key);
-//
-//
-//JSON *json_make_array(void);
-//
-//void json_push_array(Array *array,
-//                     JSON *value);
-//
-//void json_pop_array(Array *array,
-//                    size_t index);
+size_t count_json(ValueJSON* container);
 
 
 void parse_json(JSON *json,

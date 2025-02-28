@@ -94,14 +94,14 @@ The ```JSON``` struct contains a type hint and the relevant data:
 ```c
 typedef struct JSON
 {
-    Hint hint;
-    Type type;
+    HintJSON hint;
+    TypeJSON type;
 } JSON;
 ```
 
-```Hint``` is an enum type which indicates the correct type contained in the ```Type``` value.
+```HintJSON``` is an enum type which indicates the correct type contained in the ```TypeJSON``` value.
 
-```Type``` is a union. It contains all possible JSON types represented with C types:
+```TypeJSON``` is a union. It contains all possible JSON types represented with C types:
 ```c
 // json type: null
 void *null = NULL;

@@ -1,17 +1,17 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "../internals/array.h"
-#include "../internals/write.h"
-#include "../internals/value.h"
-#include "../internals/error.h"
+#include "../../internals/json/obj.h"
+#include "../../internals/json/write.h"
+#include "../../internals/json/parse.h"
+#include "../../internals/error.h"
 
 
 typedef struct JSON
 {
     Arena *arena;
     Array *meta;
-    Value *value;
+    ValueJSON *value;
 } JSON;
 
 
@@ -39,16 +39,16 @@ JSON *create_json(void)
     JSON *json = alloc_arena(arena,
                              sizeof(JSON));
 
-    Hint hint = JSON_NULL;
-    Type type = {
+    HintJSON hint = JSON_NULL;
+    TypeJSON type = {
         .n = NULL
     };
 
     json->arena = arena;
     json->meta = create_array(json->arena);
-    json->value = make_value(json->arena,
-                             hint,
-                             type);
+    json->value = make_value_json(json->arena,
+                                  hint,
+                                  type);
 
     return json;
 }
@@ -62,7 +62,7 @@ void destroy_json(JSON **json)
 
         for (int i = 0; i < count; ++i)
         {
-            Value *value = (*json)->meta->values[i];
+            ValueJSON *value = (*json)->meta->values[i];
 
             if (value->hint == JSON_ARRAY)
             {
@@ -92,15 +92,15 @@ void destroy_json(JSON **json)
 }
 
 
-Value *get_json(JSON *json)
+ValueJSON *get_json(JSON *json)
 {
     return json->value;
 }
 
-Value *lookup_json(Value *object,
-                   const char *key)
+ValueJSON *lookup_json(ValueJSON *object,
+                       const char *key)
 {
-    Value *result = NULL;
+    ValueJSON *result = NULL;
 
     if (object->hint == JSON_OBJECT)
     {
@@ -111,10 +111,10 @@ Value *lookup_json(Value *object,
     return result;
 }
 
-Value *scan_json(Value *array,
-                 size_t index)
+ValueJSON *scan_json(ValueJSON *array,
+                     size_t index)
 {
-    Value *result = NULL;
+    ValueJSON *result = NULL;
 
     if (array->hint == JSON_ARRAY &&
         index < array->type.a->nmemb)
@@ -126,11 +126,11 @@ Value *scan_json(Value *array,
 }
 
 
-Value *make_json(JSON* json,
-                 Hint hint)
+ValueJSON *make_json(JSON* json,
+                     HintJSON hint)
 {
-    Value *value = alloc_arena(json->arena,
-                               sizeof(Value));
+    ValueJSON *value = alloc_arena(json->arena,
+                                   sizeof(ValueJSON));
 
     value->hint = hint;
 
@@ -144,7 +144,9 @@ Value *make_json(JSON* json,
     }
     else if (hint == JSON_BOOL)
     {
-        value->type.b = false;
+        value->type.b = make_boolean(false,
+                                     "false",
+                                     json->arena);
     }
     else if (hint == JSON_STRING)
     {
@@ -177,8 +179,8 @@ Value *make_json(JSON* json,
 }
 
 
-void push_json(Value *array,
-               Value *value)
+void push_json(ValueJSON *array,
+               ValueJSON *value)
 {
     if (array->hint == JSON_ARRAY)
     {
@@ -187,8 +189,8 @@ void push_json(Value *array,
     }
 }
 
-void pop_json(Value *array,
-               const size_t index)
+void pop_json(ValueJSON *array,
+              const size_t index)
 {
     if (array->hint == JSON_ARRAY)
     {
@@ -198,9 +200,9 @@ void pop_json(Value *array,
 }
 
 
-void insert_json(Value *object,
+void insert_json(ValueJSON *object,
                  const char *key,
-                 Value *value)
+                 ValueJSON *value)
 {
     if (object->hint == JSON_OBJECT)
     {
@@ -210,7 +212,7 @@ void insert_json(Value *object,
     }
 }
 
-void erase_json(Value *object,
+void erase_json(ValueJSON *object,
                 const char *key)
 {
     if (object->hint == JSON_OBJECT)
@@ -221,7 +223,7 @@ void erase_json(Value *object,
 }
 
 
-size_t count_json(Value* container)
+size_t count_json(ValueJSON* container)
 {
     size_t result = -1;
 
@@ -257,10 +259,10 @@ void parse_json(JSON *json,
               fsize,
               file);
 
-        Value *value = parse_value(fdata,
-                                   &offset,
-                                   json->meta,
-                                   json->arena);
+        ValueJSON *value = parse_value_json(fdata,
+                                            &offset,
+                                            json->meta,
+                                            json->arena);
 
         json->value = value;
 
@@ -273,15 +275,19 @@ void parse_json(JSON *json,
 void write_json(const JSON *json,
                 const char *path)
 {
-    FILE *file = fopen(path,
-                       "w");
+    if (json)
+    {
+        FILE *file = fopen(path,
+                           "w");
 
-    assert(file);
+        if (file)
+        {
+            write_value(file,
+                        json->value,
+                        0,
+                        json->arena);
+        }
 
-    write_value(file,
-                json->value,
-                0,
-                json->arena);
-
-    fclose(file);
+        fclose(file);
+    }
 }

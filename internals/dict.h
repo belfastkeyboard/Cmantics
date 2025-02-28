@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include <stddef.h>
+#include <stdbool.h>
 #include "arena.h"
 
 
@@ -20,10 +20,12 @@ struct Dict
     struct Bucket *buckets;
     size_t nmemb;
     size_t capacity;
+    bool case_sensitive;
 };
 
 
-struct Dict *create_dict(Arena *arena);
+struct Dict *create_dict(Arena *arena,
+                         bool case_sensitive);
 
 void destroy_dict(struct Dict *dict);
 

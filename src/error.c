@@ -1,7 +1,6 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "../internals/error.h"
 
 
 #define BUFFSZ 256

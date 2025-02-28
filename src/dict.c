@@ -1,9 +1,7 @@
 #include <assert.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#include <stddef.h>
 #include <memory.h>
-#include <malloc.h>
 #include "../internals/dict.h"
 
 
@@ -30,6 +28,16 @@ struct Bucket
 };
 
 
+static int pair_cmp(const void *a,
+                    const void *b)
+{
+    struct Bucket bucket1 = *(struct Bucket*)a;
+    struct Bucket bucket2 = *(struct Bucket*)b;
+
+    return (bucket1.cron > bucket2.cron) - (bucket1.cron < bucket2.cron);
+}
+
+
 static Hash djb2(const char *key)
 {
     Hash hash = 5381;
@@ -51,12 +59,16 @@ static size_t get_index(const Hash hash,
 
 static bool is_found(const struct Bucket bucket,
                      const void *key,
-                     const bool skip_tombstones)
+                     const bool skip_tombstones,
+                     const bool case_sensitive)
 {
+    int (*cmp)(const char*, const char*) = (case_sensitive) ? strcmp :
+                                                              strcasecmp;
+
     bool found_bucket = !bucket.tombstone &&
                         bucket.key != (const char*)UNSET &&
-                        strcmp(key,
-                               bucket.key) == 0;
+                        cmp(key,
+                            bucket.key) == 0;
 
     bool invalid_or_tombstone = !skip_tombstones &&
                                 (bucket.key == (const char*)INVALID ||
@@ -71,7 +83,8 @@ static size_t probe(struct Bucket *buckets,
                     const size_t capacity,
                     const void *key,
                     size_t index,
-                    const bool skip_tombstones)
+                    const bool skip_tombstones,
+                    const bool case_sensitive)
 {
     assert(buckets);
 
@@ -99,7 +112,8 @@ static size_t probe(struct Bucket *buckets,
 
         if (is_found(bucket,
                      key,
-                     skip_tombstones))
+                     skip_tombstones,
+                     case_sensitive))
         {
             found = index;
         }
@@ -176,7 +190,8 @@ static void initialise_buckets(struct Bucket **buckets,
 static void reindex_buckets(struct Bucket *buckets,
                             const struct Bucket *tmp,
                             const size_t old_capacity,
-                            const size_t new_capacity)
+                            const size_t new_capacity,
+                            const bool case_sensitive)
 {
     for (int i = 0; i < old_capacity; i++)
     {
@@ -195,7 +210,8 @@ static void reindex_buckets(struct Bucket *buckets,
                       new_capacity,
                       bucket.key,
                       index,
-                      false);
+                      false,
+                      case_sensitive);
 
         buckets[index] = bucket;
     }
@@ -203,7 +219,8 @@ static void reindex_buckets(struct Bucket *buckets,
 
 static void resize_buckets(struct Bucket **buckets,
                            size_t *capacity,
-                           const float factor)
+                           const float factor,
+                           const bool case_sensitive)
 {
     assert(*buckets);
 
@@ -235,13 +252,15 @@ static void resize_buckets(struct Bucket **buckets,
     reindex_buckets(*buckets,
                     tmp,
                     old_capacity,
-                    new_capacity);
+                    new_capacity,
+                    case_sensitive);
 
     free(tmp);
 }
 
 
-static void should_resize(struct Dict *dict)
+static void should_resize(struct Dict *dict,
+                          const bool case_sensitive)
 {
     float resize_factor = get_resize_factor(dict->nmemb,
                                             dict->capacity,
@@ -256,7 +275,8 @@ static void should_resize(struct Dict *dict)
     {
         resize_buckets(&dict->buckets,
                        &dict->capacity,
-                       resize_factor);
+                       resize_factor,
+                       case_sensitive);
     }
 }
 
@@ -278,7 +298,8 @@ static struct Bucket create_bucket(const size_t cron,
 
 static size_t find_bucket(struct Bucket *buckets,
                           const size_t capacity,
-                          const void *key)
+                          const void *key,
+                          const bool case_sensitive)
 {
     size_t index = NOT_FOUND;
 
@@ -293,17 +314,21 @@ static size_t find_bucket(struct Bucket *buckets,
                       capacity,
                       key,
                       index,
-                      true);
+                      true,
+                      case_sensitive);
     }
 
     return index;
 }
 
 
-struct Dict *create_dict(Arena *arena)
+struct Dict *create_dict(Arena *arena,
+                         const bool case_sensitive)
 {
     struct Dict *dict = calloc_arena(arena,
                                      sizeof(struct Dict));
+
+    dict->case_sensitive = case_sensitive;
 
     return dict;
 }
@@ -318,7 +343,8 @@ void insert_dict(struct Dict *dict,
                  const char *key,
                  void *value)
 {
-    should_resize(dict);
+    should_resize(dict,
+                  dict->case_sensitive);
 
     assert(dict->buckets);
 
@@ -331,7 +357,8 @@ void insert_dict(struct Dict *dict,
                   dict->capacity,
                   key,
                   index,
-                  false);
+                  false,
+                  dict->case_sensitive);
 
     bool exists = dict->buckets[index].key != (const char*)UNSET;
 
@@ -357,7 +384,8 @@ void erase_dict(struct Dict *dict,
 {
     size_t index = find_bucket(dict->buckets,
                                dict->capacity,
-                               key);
+                               key,
+                               dict->case_sensitive);
 
     if (index != NOT_FOUND)
     {
@@ -365,7 +393,8 @@ void erase_dict(struct Dict *dict,
 
         dict->nmemb--;
 
-        should_resize(dict);
+        should_resize(dict,
+                      dict->case_sensitive);
     }
 }
 
@@ -379,7 +408,8 @@ void *find_dict(struct Dict *dict,
     {
         size_t index = find_bucket(dict->buckets,
                                    dict->capacity,
-                                   key);
+                                   key,
+                                   dict->case_sensitive);
 
         if (index != NOT_FOUND)
         {
@@ -390,15 +420,6 @@ void *find_dict(struct Dict *dict,
     return value;
 }
 
-
-int pair_cmp(const void *a,
-             const void *b)
-{
-    struct Bucket bucket1 = *(struct Bucket*)a;
-    struct Bucket bucket2 = *(struct Bucket*)b;
-
-    return (bucket1.cron > bucket2.cron) - (bucket1.cron < bucket2.cron);
-}
 
 struct DictPair *get_iterable_pairs(struct Dict *dict,
                                     Arena *arena)
