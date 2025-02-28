@@ -1,17 +1,10 @@
 #pragma once
 
+
 #include "../json.h"
+#include "../internals/dict.h"
 
 
-typedef char *Key;
-
-
-typedef struct Pair
-{
-    Key key;
-    JSON *value;
-} Pair;
-
-
-Pair *make_pair(char *data,
-                size_t *offset);
+struct DictPair parse_pair(JSON *json,
+                           char *data,
+                           size_t *offset);

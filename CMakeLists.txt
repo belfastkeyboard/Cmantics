@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.28)
 
-project(ParseJSONC C)
+project(Cmantics C)
 
 set(CMAKE_C_STANDARD 23)
 
@@ -9,13 +9,11 @@ set(CMAKE_C_STANDARD 23)
 #set(BUILD Release)
 
 
-
 set(SOURCE_DIR ${CMAKE_SOURCE_DIR}/src)
 set(LIB_DIR ${CMAKE_SOURCE_DIR}/libs)
 
 file(GLOB_RECURSE SOURCES "${SOURCE_DIR}/*.c")
 file(GLOB_RECURSE LIBS "${LIB_DIR}/*.a")
-
 
 
 if (BUILD STREQUAL "Release")
@@ -28,8 +26,8 @@ if (BUILD STREQUAL "Release")
 endif()
 
 
+#add_library(
+#    Cmantics ${SOURCES}
+#)
 
-add_library(
-    json main.c
-        ${SOURCES}
-)
+add_executable(Cmantics main.c ${SOURCES})

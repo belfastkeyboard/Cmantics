@@ -95,16 +95,17 @@ static void write_boolean(FILE *file,
 
 void write_array(FILE *file,
                  const Array *array,
-                 const int indentation)
+                 const int indentation,
+                 Arena *arena)
 {
     fputc('[',
           file);
 
-    for (size_t i = 0; i < array->size; ++i)
+    for (size_t i = 0; i < array->nmemb; ++i)
     {
-        JSON *value = array->values[i];
+        Value *value = array->values[i];
 
-        if (value->hint == HINT_OBJECT)
+        if (value->hint == JSON_OBJECT)
         {
             write_new_line(file,
                            indentation + INDENTATION_AMOUNT);
@@ -112,17 +113,18 @@ void write_array(FILE *file,
 
         write_value(file,
                     value,
-                    indentation + INDENTATION_AMOUNT);
+                    indentation + INDENTATION_AMOUNT,
+                    arena);
 
-        if (i < array->size - 1)
+        if (i < array->nmemb - 1)
         {
             fprintf(file,
                     ", ");
         }
     }
 
-    if (array->size &&
-        array->values[array->size - 1]->hint == HINT_OBJECT)
+    if (array->nmemb &&
+        array->values[array->nmemb - 1]->hint == JSON_OBJECT)
     {
         write_new_line(file,
                        indentation);
@@ -134,21 +136,24 @@ void write_array(FILE *file,
 
 
 static void write_pair(FILE *file,
-                       const Pair *pair,
-                       const int indentation)
+                       const struct DictPair pair,
+                       const int indentation,
+                       Arena *arena)
 {
     write_key(file,
-              pair->key);
+              pair.key);
 
     write_value(file,
-                pair->value,
-                indentation);
+                pair.value,
+                indentation,
+                arena);
 }
 
 
-void write_object(FILE *file,
-                  const Object *object,
-                  const int indentation)
+static void write_object(FILE *file,
+                         const Object *object,
+                         const int indentation,
+                         Arena *arena)
 {
     fputc('{',
           file);
@@ -156,15 +161,18 @@ void write_object(FILE *file,
     write_new_line(file,
                    indentation + INDENTATION_AMOUNT);
 
-    for (size_t i = 0; i < object->size; i++)
+    struct DictPair *pairs = get_iterable_pairs(object->dict,
+                                                arena);
+    for (int i = 0; i < object->dict->nmemb; ++i)
     {
-        const Pair *pair = object->pairs[i];
+        struct DictPair pair = pairs[i];
 
         write_pair(file,
                    pair,
-                   indentation + INDENTATION_AMOUNT);
+                   indentation + INDENTATION_AMOUNT,
+                   arena);
 
-        if (i < object->size - 1)
+        if (i < object->dict->nmemb - 1)
         {
             fprintf(file,
                     ",");
@@ -183,37 +191,40 @@ void write_object(FILE *file,
 
 
 void write_value(FILE *file,
-                 const JSON *value,
-                 const int indentation)
+                 const Value *value,
+                 const int indentation,
+                 Arena *arena)
 {
     switch (value->hint)
     {
-        case HINT_NULL:
+        case JSON_NULL:
             write_null(file);
             break;
-        case HINT_OBJECT:
+        case JSON_OBJECT:
             write_object(file,
                          value->type.o,
-                         indentation);
+                         indentation,
+                         arena);
             break;
-        case HINT_ARRAY:
+        case JSON_ARRAY:
             write_array(file,
                         value->type.a,
-                        indentation);
+                        indentation,
+                        arena);
             break;
-        case HINT_STRING:
+        case JSON_STRING:
             write_string(file,
                          value->type.s);
             break;
-        case HINT_INT:
+        case JSON_INT:
             write_int(file,
                       value->type.i);
             break;
-        case HINT_FLOAT:
+        case JSON_FLOAT:
             write_float(file,
                         value->type.f);
             break;
-        case HINT_BOOL:
+        case JSON_BOOL:
             write_boolean(file,
                           value->type.b);
             break;

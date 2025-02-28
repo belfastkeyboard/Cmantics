@@ -2,12 +2,16 @@
 
 Simple interface for using the JSON file format in C.
 
+## TODO
+- Handle comments
+- CSV Parser
+
 ## EXAMPLES
 ### READ FROM FILE
 ```c
 json_open();
 
-JSON *json = json_read("json_example.json");
+JSON *json = parse_json("json_example.json");
 
 json = json_find(json,
                  "courses");
@@ -40,9 +44,9 @@ json_close();
 ```c
 json_open();
 
-JSON *value = json_read("json_example.json");
+JSON *value = parse_json("json_example.json");
 
-json_write("json_copy.json",
+write_json("json_copy.json",
            value);
 
 json_close();
@@ -52,7 +56,7 @@ json_close();
 ```c
 json_open();
 
-JSON *obj = json_read("example.json");
+JSON *obj = parse_json("example.json");
 
 
 JSON *employees = json_find(obj,
@@ -61,14 +65,14 @@ JSON *employees = json_find(obj,
 JSON *employee = json_make_object();
 
 int id = 9545;
-JSON *employee_id = json_make_value(HINT_INT,
+JSON *employee_id = json_make_value(INI_INT,
                                     &id);
 
 json_push_object(employee->type.o,
                  "id",
                  employee_id);
 
-JSON *employee_name = json_make_value(HINT_STRING,
+JSON *employee_name = json_make_value(INI_STRING,
                                       "Paul O'Brien");
 
 json_push_object(employee->type.o,
@@ -78,7 +82,7 @@ json_push_object(employee->type.o,
 json_push_array(employees->type.a,
                 employee);
 
-json_write("example.json",
+write_json("example.json",
            obj);
 
 json_close();
@@ -147,8 +151,8 @@ If the index is not valid, the object will not be modified.
 
 All other values can be modified in place, e.g.:
 ```c
-JSON *val = json_read("example.json");
+JSON *val = parse_json("example.json");
 
-val.hint = HINT_INT;
+val.hint = INI_INT;
 val.type.i = 45;
 ```

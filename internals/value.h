@@ -3,5 +3,11 @@
 #include "../json.h"
 
 
-JSON *make_value(char *data,
-                 size_t *offset);
+Value *make_value(Arena *arena,
+                  Hint hint,
+                  Type type);
+
+
+Value *parse_value(JSON *json,
+                   char *data,
+                   size_t *offset);

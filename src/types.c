@@ -3,63 +3,56 @@
 #include "../internals/types.h"
 
 
-Hint determine_type(const char c)
+Hint determine_type(const char c,
+                    char *data,
+                    const size_t offset)
 {
-    Hint value;
+    Hint hint;
 
     if (c == '"')
     {
-        value = HINT_STRING;
+        hint = JSON_STRING;
     }
     else if (isdigit(c) ||
              c == '-')
     {
-        value = HINT_DIGIT;
+        hint = JSON_INT;
+
+        size_t len = strspn(data + offset,
+                            "+-0123456789.eE");
+
+        for (int i = 0; i < len; i++)
+        {
+            if (data[offset + i] == '.' ||
+                data[offset + i] == 'e' ||
+                data[offset + i] == 'E')
+            {
+                hint = JSON_FLOAT;
+
+                break;
+            }
+        }
     }
     else if (c == 'f' || c == 't')
     {
-        value = HINT_BOOL;
+        hint = JSON_BOOL;
     }
     else if (c == '[')
     {
-        value = HINT_ARRAY;
+        hint = JSON_ARRAY;
     }
     else if (c == '{')
     {
-        value = HINT_OBJECT;
+        hint = JSON_OBJECT;
     }
     else if (c == 'n')
     {
-        value = HINT_NULL;
+        hint = JSON_NULL;
     }
     else
     {
-        value = HINT_ERROR;
+        hint = JSON_ERROR;
     }
 
-    return value;
-}
-
-
-Hint determine_digit(char *data,
-                     const size_t offset)
-{
-    Hint type = HINT_INT;
-
-    size_t len = strspn(data + offset,
-                        "+-0123456789.eE");
-
-    for (int i = 0; i < len; i++)
-    {
-        if (data[offset + i] == '.' ||
-            data[offset + i] == 'e' ||
-            data[offset + i] == 'E')
-        {
-            type = HINT_FLOAT;
-
-            break;
-        }
-    }
-
-    return type;
+    return hint;
 }

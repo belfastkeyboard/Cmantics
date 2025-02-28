@@ -3,28 +3,26 @@
 #include <string.h>
 #include "../internals/arena.h"
 #include "../internals/parse.h"
+#include "../internals/error.h"
 
 
-extern Arena *allocator;
-
-
-void handle_string(char **src,
-                   char *data,
-                   size_t *offset)
+char *handle_string(char *data,
+                    size_t *offset,
+                    Arena *arena)
 {
-    size_t len = strcspn(data + *offset,
-                         "\"");
+    const size_t len = strcspn(data + *offset,
+                               "\"");
 
-    *src = alloc_arena(allocator,
-                       len + 1);
+    char *string = calloc_arena(arena,
+                                len + 1);
 
-    strncpy(*src,
+    strncpy(string,
             data + *offset,
             len);
 
-    (*src)[len] = '\0';
-
     *offset += len + 1;
+
+    return string;
 }
 
 
@@ -32,12 +30,13 @@ int handle_integer(char *data,
                    size_t *offset)
 {
     char *ptr;
+    const size_t off = *offset;
 
-    int result = (int)strtol(data + *offset,
+    int result = (int)strtol(data + off,
                              &ptr,
                              10);
 
-    *offset += ptr - (data + *offset);
+    *offset += ptr - (data + off);
 
     return result;
 }
@@ -47,11 +46,12 @@ double handle_float(char *data,
                    size_t *offset)
 {
     char *ptr;
+    const size_t off = *offset;
 
-    double result = strtod(data + *offset,
+    double result = strtod(data + off,
                            &ptr);
 
-    *offset += ptr - (data + *offset);
+    *offset += ptr - (data + off);
 
     return result;
 }
@@ -62,6 +62,7 @@ bool handle_boolean(char *data,
                     size_t *offset)
 {
     char boolean[6] = { 0 };
+    bool result;
 
     size_t len = (c == 'f') ? 5 :
                               4;
@@ -72,8 +73,26 @@ bool handle_boolean(char *data,
 
     *offset += len;
 
-    return (strcmp(boolean,
-                   "true") == 0);
+    if (strcmp(boolean,
+               "true") == 0)
+    {
+        result = true;
+    }
+    else if (strcmp(boolean,
+                    "false") == 0)
+    {
+        result = false;
+    }
+    else
+    {
+        throw(__FILE__,
+              __FUNCTION__,
+              __LINE__,
+              "Error boolean type: %s",
+              boolean);
+    }
+
+    return result;
 }
 
 

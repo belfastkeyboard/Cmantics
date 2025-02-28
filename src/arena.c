@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <malloc.h>
+#include <memory.h>
 #include "../internals/arena.h"
 
 
@@ -98,4 +99,15 @@ void *alloc_arena(Arena *arena,
 {
     return arena_alloc(&arena->curr,
                        size);
+}
+
+void *calloc_arena(Arena *arena,
+                   size_t size)
+{
+    void *ptr = alloc_arena(arena,
+                            size);
+
+    return memset(ptr,
+                  0,
+                  size);
 }

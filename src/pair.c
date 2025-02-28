@@ -4,26 +4,28 @@
 #include "../internals/obj.h"
 #include "../internals/parse.h"
 #include "../internals/value.h"
+#include "../internals/json.h"
 
 
-extern Arena *allocator;
-
-
-Pair *make_pair(char *data,
-                size_t *offset)
+struct DictPair parse_pair(JSON *json,
+                           char *data,
+                           size_t *offset)
 {
-    Pair *pair = alloc_arena(allocator,
-                             sizeof(Pair));
-
-    handle_string(&pair->key,
-                  data,
-                  offset);
+    const char *key = handle_string(data,
+                                    offset,
+                                    json->arena);
 
     *offset += strspn(data + *offset,
                       ": ");
 
-    pair->value = make_value(data,
-                             offset);
+    void *value = parse_value(json,
+                              data,
+                              offset);
+
+    struct DictPair pair = {
+        .key = key,
+        .value = value
+    };
 
     return pair;
 }

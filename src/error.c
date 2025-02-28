@@ -6,6 +6,7 @@
 
 #define BUFFSZ 256
 
+
 void throw(const char *file,
            const char *function,
            int line,

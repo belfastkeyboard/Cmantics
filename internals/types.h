@@ -3,8 +3,6 @@
 #include "../json.h"
 
 
-Hint determine_type(char c);
-
-Hint determine_digit(char *data,
-                     size_t offset);
-
+Hint determine_type(char c,
+                    char *data,
+                    size_t offset);

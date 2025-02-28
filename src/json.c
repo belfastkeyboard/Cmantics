@@ -1,16 +1,14 @@
 #include <assert.h>
-#include <errno.h>
-#include <memory.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include "../internals/symbols.h"
 #include "../internals/array.h"
-#include "../internals/ext.h"
 #include "../internals/eval.h"
 #include "../internals/get.h"
 #include "../internals/write.h"
 #include "../internals/value.h"
-
-
-Arena *allocator;
+#include "../internals/json.h"
+#include "../internals/error.h"
 
 
 static size_t get_file_size(FILE *file)
@@ -30,49 +28,216 @@ static size_t get_file_size(FILE *file)
 }
 
 
-static JSON *parse_json_file(FILE *file)
+JSON *create_json(void)
 {
-    size_t offset = 0;
-    size_t fsize = get_file_size(file);
+    Arena *arena = create_arena(KB(4));
 
-    char *fdata = calloc(sizeof(char),
-                         fsize + 1);
+    JSON *json = alloc_arena(arena,
+                             sizeof(JSON));
 
-    fread(fdata,
-          sizeof(char),
-          fsize,
-          file);
+    Hint hint = JSON_NULL;
+    Type type = {
+        .n = NULL
+    };
 
-    JSON *value = make_value(fdata,
-                             &offset);
+    json->arena = arena;
+    json->meta = create_array(json->arena);
+    json->value = make_value(json->arena,
+                             hint,
+                             type);
 
-    free(fdata);
+    return json;
+}
+
+
+void destroy_json(JSON **json)
+{
+    if (*json)
+    {
+        const size_t count = (*json)->meta->nmemb;
+
+        for (int i = 0; i < count; ++i)
+        {
+            Value *value = (*json)->meta->values[i];
+
+            if (value->hint == JSON_ARRAY)
+            {
+                destroy_array(value->type.a);
+            }
+            else if (value->hint == JSON_OBJECT)
+            {
+                destroy_dict(value->type.o->dict);
+            }
+            else
+            {
+                throw(__FILE__,
+                      __FUNCTION__,
+                      __LINE__,
+                      "Error hint type: %d",
+                      value->hint);
+            }
+        }
+
+        destroy_array((*json)->meta);
+
+        Arena *arena = (*json)->arena;
+        destroy_arena(&arena);
+
+        *json = NULL;
+    }
+}
+
+
+Value *get_json(JSON *json)
+{
+    return json->value;
+}
+
+Value *lookup_json(Value *object,
+                   const char *key)
+{
+    Value *result = NULL;
+
+    if (object->hint == JSON_OBJECT)
+    {
+        result = find_dict(object->type.o->dict,
+                           key);
+    }
+
+    return result;
+}
+
+Value *scan_json(Value *array,
+                 size_t index)
+{
+    Value *result = NULL;
+
+    if (array->hint == JSON_ARRAY &&
+        index < array->type.a->nmemb)
+    {
+        result = array->type.a->values[index];
+    }
+
+    return result;
+}
+
+
+Value *make_json(JSON* json,
+                 Hint hint)
+{
+    Value *value = alloc_arena(json->arena,
+                               sizeof(Value));
+
+    value->hint = hint;
+
+    if (hint == JSON_INT)
+    {
+        value->type.i = 0;
+    }
+    else if (hint == JSON_FLOAT)
+    {
+        value->type.f = 0.0f;
+    }
+    else if (hint == JSON_BOOL)
+    {
+        value->type.b = false;
+    }
+    else if (hint == JSON_STRING)
+    {
+        value->type.s = "";
+    }
+    else if (hint == JSON_NULL)
+    {
+        value->type.n = NULL;
+    }
+    else if (hint == JSON_ARRAY)
+    {
+        value->type.a = make_array(json);
+    }
+    else if (hint == JSON_OBJECT)
+    {
+        value->type.o = make_object(json);
+    }
+    else
+    {
+        throw(__FILE__,
+              __FUNCTION__,
+              __LINE__,
+              "Error hint type: %d",
+              hint);
+    }
 
     return value;
 }
 
 
-void json_open(void)
+void push_json(Value *array,
+               Value *value)
 {
-    allocator = create_arena(4096);
+    if (array->hint == JSON_ARRAY)
+    {
+        push_array(array->type.a,
+                   value);
+    }
 }
 
-
-void json_close(void)
+void pop_json(Value *array,
+               const size_t index)
 {
-    if (allocator)
+    if (array->hint == JSON_ARRAY)
     {
-        destroy_arena(&allocator);
+        pop_array(array->type.a,
+                  index);
     }
 }
 
 
+void insert_json(Value *object,
+                 const char *key,
+                 Value *value)
+{
+    if (object->hint == JSON_OBJECT)
+    {
+        insert_dict(object->type.o->dict,
+                    key,
+                    value);
+    }
+}
+
+void erase_json(Value *object,
+                const char *key)
+{
+    if (object->hint == JSON_OBJECT)
+    {
+        erase_dict(object->type.o->dict,
+                   key);
+    }
+}
+
+
+size_t count_json(Value* container)
+{
+    size_t result = -1;
+
+    if (container->hint == JSON_ARRAY)
+    {
+        result = container->type.a->nmemb;
+    }
+    else if (container->hint == JSON_OBJECT)
+    {
+        result = container->type.o->dict->nmemb;
+    }
+
+    return result;
+}
+
+/*
 JSON *json_find(JSON *value,
                 const char *key)
 {
     JSON *result = NULL;
 
-    if (value->hint == HINT_OBJECT)
+    if (value->hint == JSON_OBJECT)
     {
         size_t i;
         Pair *pair = scan_object(value->type.o,
@@ -88,20 +253,6 @@ JSON *json_find(JSON *value,
     return result;
 }
 
-JSON *json_lookup(JSON *value,
-                  size_t index)
-{
-    JSON *result = NULL;
-
-    if (value->hint == HINT_ARRAY)
-    {
-        result = lookup_array(value->type.a,
-                              index);
-    }
-
-    return result;
-}
-
 
 JSON *json_make_value(const Hint hint,
                       void *type)
@@ -109,8 +260,8 @@ JSON *json_make_value(const Hint hint,
 
     JSON *json = NULL;
 
-    if (hint != HINT_OBJECT &&
-        hint != HINT_ARRAY)
+    if (hint != JSON_OBJECT &&
+        hint != JSON_ARRAY)
     {
         json = alloc_arena(allocator,
                            sizeof(JSON));
@@ -120,25 +271,25 @@ JSON *json_make_value(const Hint hint,
 
     switch (hint)
     {
-        case HINT_INT:
+        case JSON_INT:
             json->type.i = *(int*)type;
             break;
-        case HINT_FLOAT:
+        case JSON_FLOAT:
             json->type.f = *(float*)type;
             break;
-        case HINT_NULL:
+        case JSON_NULL:
             json->type.n = NULL;
             break;
-        case HINT_BOOL:
+        case JSON_BOOL:
             json->type.b = *(bool*)type;
             break;
-        case HINT_STRING:
+        case JSON_STRING:
             json->type.s = (char*)type;
             break;
-        case HINT_ARRAY:
+        case JSON_ARRAY:
             json = json_make_array();
             break;
-        case HINT_OBJECT:
+        case JSON_OBJECT:
             json = json_make_object();
             break;
         default:
@@ -158,7 +309,7 @@ JSON *json_make_object(void)
         json = alloc_arena(allocator,
                            sizeof(JSON));
 
-        json->hint = HINT_OBJECT;
+        json->hint = JSON_OBJECT;
 
         Object *object = alloc_arena(allocator,
                                      sizeof(Object));
@@ -240,7 +391,7 @@ JSON *json_make_array(void)
         json = alloc_arena(allocator,
                            sizeof(JSON));
 
-        json->hint = HINT_ARRAY;
+        json->hint = JSON_ARRAY;
 
         Array *array = alloc_arena(allocator,
                                    sizeof(Array));
@@ -287,34 +438,41 @@ void json_pop_array(Array *array,
         array->size--;
     }
 }
+*/
 
-
-JSON *json_read(const char *path)
+void parse_json(JSON *json,
+                const char *path)
 {
-    JSON *json = NULL;
+    FILE *file = fopen(path,
+                       "r");
 
-    if (is_json_file(path))
+    if (file)
     {
-        FILE *file = fopen(path,
-                           "r");
+        size_t offset = 0;
+        size_t fsize = get_file_size(file);
 
-        if (file)
-        {
-            json = parse_json_file(file);
+        char *fdata = calloc(sizeof(char),
+                             fsize + 1);
 
-            fclose(file);
-        }
+        fread(fdata,
+              sizeof(char),
+              fsize,
+              file);
+
+        Value *value = parse_value(json,
+                                   fdata,
+                                   &offset);
+
+        json->value = value;
+
+        free(fdata);
     }
-    else
-    {
-        errno = EINVAL;
-    }
 
-    return json;
+    fclose(file);
 }
 
-void json_write(const char *path,
-                const JSON *value)
+void write_json(const JSON *json,
+                const char *path)
 {
     FILE *file = fopen(path,
                        "w");
@@ -322,8 +480,9 @@ void json_write(const char *path,
     assert(file);
 
     write_value(file,
-                value,
-                0);
+                json->value,
+                0,
+                json->arena);
 
     fclose(file);
 }

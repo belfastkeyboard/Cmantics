@@ -4,33 +4,19 @@
 #include "../internals/get.h"
 
 
-Pair *scan_object(const Object *object,
-                  const char *key,
-                  size_t *index)
+Value *find_object(const Object *object,
+                   const char *key)
 {
-    Pair *result = NULL;
-
-    for (int i = 0; i < object->size && !result; i++)
-    {
-        Pair *pair = object->pairs[i];
-
-        if (strcmp(pair->key,
-                   key) == 0)
-        {
-            result = pair;
-            *index = i;
-        }
-    }
-
-    return result;
+    return find_dict(object->dict,
+                     key);
 }
 
-JSON *lookup_array(const Array *array,
-                   size_t index)
+Value *find_array(const Array *array,
+                  size_t index)
 {
-    JSON *result = NULL;
+    Value *result = NULL;
 
-    if (index < array->size)
+    if (index < array->nmemb)
     {
         result = array->values[index];
     }

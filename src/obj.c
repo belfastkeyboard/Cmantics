@@ -4,9 +4,8 @@
 #include "../internals/eval.h"
 #include "../internals/parse.h"
 #include "../internals/obj.h"
-
-
-extern Arena *allocator;
+#include "../internals/json.h"
+#include "../internals/value.h"
 
 
 static size_t count_children(char *data,
@@ -65,28 +64,46 @@ static size_t count_children(char *data,
 }
 
 
-Object *make_object(char *data,
-                    size_t *offset)
+Object *make_object(JSON *json)
 {
-    Object *object = alloc_arena(allocator,
+    Object *object = alloc_arena(json->arena,
                                  sizeof(Object));
 
-    size_t child_count = count_children(data,
-                                        offset);
+    object->dict = create_dict(json->arena);
 
-    object->size = 0;
-    object->pairs = alloc_arena(allocator,
-                                sizeof(Pair) * child_count);
+    Hint hint = JSON_OBJECT;
+    Type type = {
+        .o = object
+    };
+
+    Value *value = make_value(json->arena,
+                              hint,
+                              type);
+
+    push_array(json->meta,
+               value);
+
+    return object;
+}
+
+
+Object *parse_object(JSON *json,
+                     char *data,
+                     size_t *offset)
+{
+
+    Object *object = make_object(json);
 
     while (evaluation(data,
                       offset) != EVAL_FIN_OBJ)
     {
-        Pair *pair = make_pair(data,
-                               offset);
+        struct DictPair pair = parse_pair(json,
+                                          data,
+                                          offset);
 
-        object->pairs[object->size] = pair;
-
-        object->size++;
+        insert_dict(object->dict,
+                    pair.key,
+                    pair.value);
     }
 
     return object;

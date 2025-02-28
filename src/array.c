@@ -1,91 +1,63 @@
+#include <malloc.h>
 #include <string.h>
 #include "../internals/array.h"
 #include "../internals/obj.h"
 #include "../internals/parse.h"
 #include "../internals/value.h"
+#include "../internals/json.h"
 
 
-extern Arena *allocator;
-
-
-static size_t count_array(const char *data,
-                          const size_t offset)
+Array *create_array(Arena *arena)
 {
-    size_t count = 0;
+    Array *array = calloc_arena(arena,
+                                sizeof(Array));
 
-    const size_t pos = strspn(data + offset,
-                              " \n");
+    return array;
+}
 
-    if (data[offset + pos] != ']')
-    {
-        size_t depth = 0;
-        size_t len = strlen(data);
-        bool in_string = false;
-
-        for (int i = 0; i < len; i++)
-        {
-            char c = data[offset + i];
-
-            if (!in_string &&
-                c == ',' &&
-                depth == 0)
-            {
-                count++;
-            }
-            else if (!in_string &&
-                     c == '{' ||
-                     c == '[')
-            {
-                depth++;
-            }
-            else if (!in_string &&
-                     depth > 0 &&
-                     (c == '}' ||
-                     c == ']'))
-            {
-                depth--;
-            }
-            else if (depth == 0 &&
-                     c == '"')
-            {
-                in_string = !in_string;
-            }
-            else if (!in_string &&
-                     depth == 0 &&
-                     c == ']')
-            {
-                break;
-            }
-        }
-
-        count++;
-    }
-
-    return count;
+void destroy_array(Array *array)
+{
+    free(array->values);
 }
 
 
-Array *make_array(char *data,
-                  size_t *offset)
+Array *make_array(JSON *json)
 {
-    Array *array = alloc_arena(allocator,
-                               sizeof(Array));
+    Array *array = create_array(json->arena);
 
-    array->size = count_array(data,
-                              *offset);
+    Hint hint = JSON_ARRAY;
+    Type type = {
+        .a = array
+    };
 
-    array->values = alloc_arena(allocator,
-                                sizeof(JSON) * array->size);
+    Value *value = make_value(json->arena,
+                              hint,
+                              type);
+
+    push_array(json->meta,
+               value);
+
+    return array;
+}
+
+
+Array *parse_array(JSON *json,
+                   char *data,
+                   size_t *offset)
+{
+    Array *array = make_array(json);
 
     *offset += strspn(data + *offset,
                       " \n");
 
-    for (int i = 0; i < array->size; i++)
+    while (data[*offset] != ']')
     {
-        JSON *json = make_value(data,
-                                offset);
+        Value *value = parse_value(json,
+                                   data,
+                                   offset);
 
-        array->values[i] = json;
+        push_array(array,
+                   value);
 
         *offset += strspn(data + *offset,
                           ", \n");
@@ -95,4 +67,46 @@ Array *make_array(char *data,
                       "]") + 1;
 
     return array;
+}
+
+
+void resize_array(Array *array)
+{
+    const size_t new_cap = (array->capacity) ? array->capacity * 2 :
+                                               1;
+
+    Value **values = realloc(array->values,
+                             new_cap * sizeof(Value));
+
+    if (values)
+    {
+        array->values = values;
+        array->capacity = new_cap;
+    }
+}
+
+void push_array(Array *array,
+                Value *value)
+{
+    if (array->nmemb >= array->capacity)
+    {
+        resize_array(array);
+    }
+
+    array->values[array->nmemb] = value;
+    array->nmemb++;
+}
+
+void pop_array(Array *array,
+               const size_t index)
+{
+    if (array->nmemb &&
+        index < array->nmemb)
+    {
+        array->nmemb--;
+
+        Value *last = array->values[array->nmemb];
+
+        array->values[index] = last;
+    }
 }

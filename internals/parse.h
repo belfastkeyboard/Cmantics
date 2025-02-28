@@ -4,9 +4,9 @@
 #include <stddef.h>
 
 
-void handle_string(char **src,
-                   char *data,
-                   size_t *offset);
+char *handle_string(char *data,
+                    size_t *offset,
+                    Arena *arena);
 
 
 int handle_integer(char *data,

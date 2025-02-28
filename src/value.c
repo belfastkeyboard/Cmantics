@@ -5,66 +5,76 @@
 #include "../internals/parse.h"
 #include "../internals/types.h"
 #include "../internals/value.h"
+#include "../internals/json.h"
 
 
-extern Arena *allocator;
+Value *make_value(Arena *arena,
+                  const Hint hint,
+                  const Type type)
+{
+    Value *value = alloc_arena(arena,
+                               sizeof(Value));
+
+    value->hint = hint;
+    value->type = type;
+
+    return value;
+}
 
 
-JSON *make_value(char *data,
-                 size_t *offset)
+Value *parse_value(JSON *json,
+                   char *data,
+                   size_t *offset)
 {
     char c = data[*offset];
 
-    Hint hint = determine_type(c);
+    Hint hint = determine_type(c,
+                               data,
+                               *offset);
+
     Type type;
 
-    if (hint == HINT_STRING)
+    if (hint == JSON_STRING)
     {
         (*offset)++;
 
-        type.s = NULL;
-
-        handle_string(&type.s,
-                      data,
-                      offset);
+        type.s = handle_string(data,
+                               offset,
+                               json->arena);
     }
-    else if (hint == HINT_DIGIT)
+    else if (hint == JSON_INT)
     {
-        if (determine_digit(data,
-                            *offset) == HINT_INT)
-        {
-            hint = HINT_INT;
-            type.i = handle_integer(data,
-                                    offset);
-        }
-        else
-        {
-            hint = HINT_FLOAT;
-            type.f = handle_float(data,
-                                  offset);
-        }
+        type.i = handle_integer(data,
+                                offset);
     }
-    else if (hint == HINT_BOOL)
+    else if (hint == JSON_FLOAT)
+    {
+        type.f = handle_float(data,
+                              offset);
+    }
+    else if (hint == JSON_BOOL)
     {
         type.b = handle_boolean(data,
                                 c,
                                 offset);
     }
-    else if (hint == HINT_ARRAY)
+    else if (hint == JSON_ARRAY)
     {
         (*offset)++;
 
-        type.a = make_array(data,
-                            offset);
-    }
-    else if (hint == HINT_OBJECT)
-    {
-        (*offset)++;
-
-        type.o = make_object(data,
+        type.a = parse_array(json,
+                             data,
                              offset);
     }
-    else if (hint == HINT_NULL)
+    else if (hint == JSON_OBJECT)
+    {
+        (*offset)++;
+
+        type.o = parse_object(json,
+                              data,
+                              offset);
+    }
+    else if (hint == JSON_NULL)
     {
         hint = hint;
         type.n = handle_null(data,
@@ -79,11 +89,9 @@ JSON *make_value(char *data,
               hint);
     }
 
-    JSON *json = alloc_arena(allocator,
-                             sizeof(JSON));
+    Value *value = make_value(json->arena,
+                              hint,
+                              type);
 
-    json->hint = hint;
-    json->type = type;
-
-    return json;
+    return value;
 }

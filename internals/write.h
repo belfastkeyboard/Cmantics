@@ -4,5 +4,6 @@
 
 
 void write_value(FILE *file,
-                 const JSON *value,
-                 int indentation);
+                 const Value *value,
+                 int indentation,
+                 Arena *arena);

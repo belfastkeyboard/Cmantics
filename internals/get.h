@@ -1,12 +1,12 @@
 #pragma once
 
+
 #include "../internals/pair.h"
 #include "../json.h"
 
 
-Pair *scan_object(const Object *object,
-                  const char *key,
-                  size_t *index);
+Value *find_object(const Object *object,
+                   const char *key);
 
-JSON *lookup_array(const Array *array,
-                   size_t index);
+Value *find_array(const Array *array,
+                  size_t index);
