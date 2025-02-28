@@ -267,9 +267,9 @@ void parse_json(JSON *json,
         json->value = value;
 
         free(fdata);
-    }
 
-    fclose(file);
+        fclose(file);
+    }
 }
 
 void write_json(const JSON *json,

@@ -96,9 +96,9 @@ void parse_ini(INI *ini,
         }
 
         free(line);
-    }
 
-    fclose(file);
+        fclose(file);
+    }
 }
 
 
