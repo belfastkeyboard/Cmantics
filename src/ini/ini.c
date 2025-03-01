@@ -1,5 +1,6 @@
 #include <malloc.h>
 #include <stddef.h>
+#include <stdint.h>
 #include "../../internals/arena.h"
 #include "../../internals/array.h"
 #include "../../internals/dict.h"
@@ -208,4 +209,18 @@ void erase_ini(INI* ini,
             }
         }
     }
+}
+
+
+size_t count_ini(ValueINI* array)
+{
+    size_t result = SIZE_MAX;
+
+    if (array &&
+        array->hint == INI_ARRAY)
+    {
+        result = array->type.a->nmemb;
+    }
+
+    return result;
 }

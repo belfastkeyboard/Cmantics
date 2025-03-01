@@ -8,6 +8,11 @@
  * This parser adheres to its own particular simple dialect.
  * It does not support nesting but does support arrays.
  *
+ * This parser contains a unique Boolean value, that allows 'true'/'false',
+ * 'yes'/'no', and 'on'/'off' to be parsed as valid boolean values.
+ *
+ * It is case-insensitive.
+ *
  * Riain Ó Tuathail
  * 01-03-2025
  *
@@ -91,3 +96,7 @@ void set_ini(INI* ini,
 void erase_ini(INI* ini,
                const char *section,
                const char *key);
+
+
+// Get the number of values in an INI Array, returns SIZE_MAX on failure
+size_t count_ini(ValueINI* array);
