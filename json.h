@@ -4,7 +4,7 @@
  * Provides utilities for reading, editing and writing JSON.
  *
  * Riain Ó Tuathail
- * 2025-03-01
+ * 01-03-2025
  *
  */
 
