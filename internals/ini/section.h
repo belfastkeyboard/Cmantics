@@ -9,5 +9,5 @@ struct Section
     struct Dict *pairs;
 };
 
-struct Section *create_header(const char *name,
-                              Arena *arena);
+struct Section *create_section(const char *name,
+                               Arena *arena);

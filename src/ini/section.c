@@ -3,15 +3,15 @@
 #include "../../internals/ini/section.h"
 
 
-struct Section *create_header(const char *name,
-                              Arena *arena)
+struct Section *create_section(const char *name,
+                               Arena *arena)
 {
-    struct Section *header = alloc_arena(arena,
+    struct Section *section = alloc_arena(arena,
                                          sizeof(struct Section));
 
-    header->name = name;
-    header->pairs = create_dict(arena,
+    section->name = name;
+    section->pairs = create_dict(arena,
                                 false);
 
-    return header;
+    return section;
 }
