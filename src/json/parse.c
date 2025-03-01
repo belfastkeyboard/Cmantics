@@ -133,10 +133,9 @@ static double handle_float(char *data,
 }
 
 
-static Boolean handle_boolean(char *data,
-                              const char c,
-                              size_t *offset,
-                              Arena *arena)
+static bool handle_boolean(char *data,
+                           const char c,
+                           size_t *offset)
 {
     char boolean[6] = { 0 };
     bool result;
@@ -169,9 +168,7 @@ static Boolean handle_boolean(char *data,
               boolean);
     }
 
-    return make_boolean(result,
-                        boolean,
-                        arena);
+    return result;
 }
 
 
@@ -330,8 +327,7 @@ ValueJSON *parse_value_json(char *data,
     {
         type.b = handle_boolean(data,
                                 c,
-                                offset,
-                                arena);
+                                offset);
     }
     else if (hint == JSON_ARRAY)
     {

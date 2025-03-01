@@ -200,9 +200,7 @@ ValueJSON *make_json(JSON* json,
     }
     else if (hint == JSON_BOOL)
     {
-        value->type.b = make_boolean(false,
-                                     "false",
-                                     json->arena);
+        value->type.b = false;
     }
     else if (hint == JSON_STRING)
     {

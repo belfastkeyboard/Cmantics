@@ -82,11 +82,14 @@ static void write_float(FILE *file,
 }
 
 static void write_boolean(FILE *file,
-                          const char *boolean)
+                          const bool boolean)
 {
+    const char *string = (boolean) ? "true" :
+                                     "false";
+
     fprintf(file,
             "%s",
-            boolean);
+            string);
 }
 
 
@@ -223,7 +226,7 @@ void write_value(FILE *file,
             break;
         case JSON_BOOL:
             write_boolean(file,
-                          value->type.b.string);
+                          value->type.b);
             break;
         default:
             break;
