@@ -1,5 +1,5 @@
 /**
- * INI Parser v1.0
+ * INI Parser v1.1
  *
  * Provides utilities for reading, editing and writing INI.
  *
