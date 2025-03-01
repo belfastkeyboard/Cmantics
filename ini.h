@@ -85,11 +85,16 @@ ValueINI *get_ini(const INI *ini,
                   const char *key);
 
 
+// Allocate a value with the JSON parser's allocator, returns default value
+ValueINI *make_ini(INI* ini,
+                   HintINI hint);
+
+
 // Set a value in the INI Parser, if value does not exist it will be created
 void set_ini(INI* ini,
              const char *section,
              const char *key,
-             const char *value);
+             ValueINI *value);
 
 
 // Erase a key-value pair from the INI Parser

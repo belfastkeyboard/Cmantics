@@ -2,12 +2,14 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "../../internals/arena.h"
+#include "../../internals/ini/boolean.h"
 #include "../../internals/array.h"
 #include "../../internals/dict.h"
 #include "../../internals/ini/parse.h"
 #include "../../internals/ini/section.h"
 #include "../../internals/ini/write.h"
 #include "../../ini.h"
+#include "../../internals/error.h"
 
 
 typedef struct INI
@@ -162,10 +164,58 @@ ValueINI *get_ini(const INI *ini,
 }
 
 
+ValueINI *make_ini(INI* ini,
+                   HintINI hint)
+{
+    ValueINI *value = alloc_arena(ini->arena,
+                                   sizeof(ValueINI));
+
+    value->hint = hint;
+
+    if (hint == INI_INT)
+    {
+        value->type.i = 0;
+    }
+    else if (hint == INI_FLOAT)
+    {
+        value->type.f = 0.0f;
+    }
+    else if (hint == INI_BOOL)
+    {
+        value->type.b = make_boolean(false,
+                                     "false",
+                                     ini->arena);
+    }
+    else if (hint == INI_STRING)
+    {
+        value->type.s = "";
+    }
+    else if (hint == INI_NULL)
+    {
+        value->type.n = NULL;
+    }
+    else if (hint == INI_ARRAY)
+    {
+        value->type.a = make_array(ini->meta,
+                                   ini->arena);
+    }
+    else
+    {
+        throw(__FILE__,
+              __FUNCTION__,
+              __LINE__,
+              "Error hint type: %d",
+              hint);
+    }
+
+    return value;
+}
+
+
 void set_ini(INI* ini,
              const char *section,
              const char *key,
-             const char *value)
+             ValueINI *value)
 {
     if (ini)
     {
@@ -182,9 +232,11 @@ void set_ini(INI* ini,
                         sec);
         }
 
+
+
         insert_dict(sec->pairs,
                     key,
-                    (void*)value);
+                    value);
     }
 }
 
