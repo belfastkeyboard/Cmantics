@@ -101,5 +101,5 @@ void pop_json(ValueJSON *array,
               size_t index);
 
 
-// Returns the number of values in a JSON Object or Array
+// Get the number of values in a JSON Object or Array, returns SIZE_MAX on failure
 size_t count_json(ValueJSON* container);
