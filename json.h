@@ -45,6 +45,13 @@ JSON *create_json(void);
 void destroy_json(JSON **json);
 
 
+void parse_json(JSON *json,
+                const char *path);
+
+void write_json(const JSON *value,
+                const char *path);
+
+
 ValueJSON *get_json(JSON *json);
 
 ValueJSON *lookup_json(ValueJSON *object,
@@ -74,10 +81,3 @@ void erase_json(ValueJSON *object,
 
 
 size_t count_json(ValueJSON* container);
-
-
-void parse_json(JSON *json,
-                const char *path);
-
-void write_json(const JSON *value,
-                const char *path);
