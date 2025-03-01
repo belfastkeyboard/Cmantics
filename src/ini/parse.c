@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "../../internals/arena.h"
+#include "../../internals/ini/boolean.h"
 #include "../../internals/array.h"
 #include "../../internals/dict.h"
 #include "../../internals/str.h"

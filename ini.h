@@ -1,12 +1,32 @@
+/**
+ * INI Parser v1.0
+ *
+ * Provides utilities for reading, editing and writing INI.
+ *
+ *
+ * INI has no enforced standard, and numerous dialects of INI exist.
+ * This parser adheres to its own particular simple dialect.
+ * It does not support nesting.
+ *
+ * Riain Ó Tuathail
+ * 2025-03-01
+ *
+ */
+
 #pragma once
 
 #include <stdbool.h>
-#include "internals/boolean.h"
 
 
 typedef struct Array Array;
 typedef struct INI INI;
 
+
+typedef struct Boolean
+{
+    bool boolean;
+    char *string;
+} Boolean;
 
 typedef enum HintINI
 {

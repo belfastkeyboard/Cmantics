@@ -1,5 +1,5 @@
 #include "../internals/str.h"
-#include "../internals/boolean.h"
+#include "../internals/ini/boolean.h"
 
 
 Boolean make_boolean(bool value,
