@@ -139,11 +139,11 @@ void write_ini(const INI *ini,
 }
 
 
-const char *get_ini(const INI *ini,
-                    const char *section,
-                    const char *key)
+ValueINI *get_ini(const INI *ini,
+                  const char *section,
+                  const char *key)
 {
-    const char *value = NULL;
+    ValueINI *value = NULL;
 
     if (ini)
     {

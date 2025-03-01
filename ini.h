@@ -75,9 +75,9 @@ void write_ini(const INI *ini,
 
 
 // Retrieve an editable value from the opaque INI parser, returns NULL on failure
-const char *get_ini(const INI *ini,
-                    const char *section,
-                    const char *key);
+ValueINI *get_ini(const INI *ini,
+                  const char *section,
+                  const char *key);
 
 
 // Set a value in the INI Parser, if value does not exist it will be created
