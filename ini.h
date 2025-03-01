@@ -9,7 +9,7 @@
  * It does not support nesting.
  *
  * Riain Ó Tuathail
- * 2025-03-01
+ * 01-03-2025
  *
  */
 
@@ -58,28 +58,36 @@ typedef struct ValueINI
 } ValueINI;
 
 
+// Allocate an INI parser that must be freed with destroy_ini()
 INI *create_ini(void);
 
+// Destroy an allocated INI parser, gracefully handles NULL INI pointers
 void destroy_ini(INI **ini);
 
 
+// Parse an INI file
 void parse_ini(INI *ini,
                const char *filepath);
 
+// Output contents of INI parser to file
 void write_ini(const INI *ini,
                const char *filepath);
 
 
+// Retrieve an editable value from the opaque INI parser, returns NULL on failure
 const char *get_ini(const INI *ini,
-                    const char *header,
+                    const char *section,
                     const char *key);
 
 
+// Set a value in the INI Parser, if value does not exist it will be created
 void set_ini(INI* ini,
-             const char *header,
+             const char *section,
              const char *key,
              const char *value);
 
+
+// Erase a key-value pair from the INI Parser
 void erase_ini(INI* ini,
-               const char *header,
+               const char *section,
                const char *key);
