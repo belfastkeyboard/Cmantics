@@ -1,9 +1,7 @@
 #pragma once
 
-#include <stdbool.h>
 #include <stddef.h>
-#include "internals/boolean.h"
-
+#include <stdbool.h>
 
 typedef struct Object Object;
 typedef struct Array Array;
@@ -26,9 +24,9 @@ typedef union TypeJSON
 {
     void    *n;
     char    *s;
-    long    i;
-    double  f;
-    Boolean b;
+    long     i;
+    double   f;
+    bool     b;
     Object  *o;
     Array   *a;
 } TypeJSON;
