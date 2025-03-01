@@ -1,5 +1,4 @@
 #include <ctype.h>
-#include <malloc.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -10,7 +9,6 @@
 #include "../../internals/ini/value.h"
 #include "../../internals/ini/section.h"
 #include "../../internals/ini/parse.h"
-#include "../../ini.h"
 #include "../../internals/error.h"
 
 
