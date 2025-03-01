@@ -70,3 +70,10 @@ void write_csv(const CSV *csv,
 ValueCSV *get_csv(const CSV *csv,
                   size_t column,
                   size_t row);
+
+
+// Get the number of columns in the CSV Table, returns SIZE_MAX on failure
+size_t columns_csv(const CSV *csv);
+
+// Get the number of rows in the CSV Table, returns SIZE_MAX on failure
+size_t rows_csv(const CSV *csv);

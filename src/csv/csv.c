@@ -1,6 +1,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include "../../internals/arena.h"
 #include "../../csv.h"
 #include "../../internals/csv/table.h"
@@ -98,4 +99,29 @@ void parse_csv(CSV *csv,
             fclose(file);
         }
     }
+}
+
+
+size_t columns_csv(const CSV *csv)
+{
+    size_t result = SIZE_MAX;
+
+    if (csv)
+    {
+        result = csv->table.columns;
+    }
+
+    return result;
+}
+
+size_t rows_csv(const CSV *csv)
+{
+    size_t result = SIZE_MAX;
+
+    if (csv)
+    {
+        result = csv->table.rows;
+    }
+
+    return result;
 }
