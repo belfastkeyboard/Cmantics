@@ -1,5 +1,15 @@
-//
-// Created by riain on 01/03/25.
-//
+#include "../../internals/csv/value.h"
 
-#include "value.h"
+
+ValueCSV *make_value_csv(Arena *arena,
+                         HintCSV hint,
+                         TypeCSV type)
+{
+    ValueCSV *value = alloc_arena(arena,
+                                  sizeof(ValueCSV));
+
+    value->hint = hint;
+    value->type = type;
+
+    return value;
+}

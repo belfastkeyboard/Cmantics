@@ -1,8 +1,9 @@
-//
-// Created by riain on 01/03/25.
-//
+#pragma once
 
-#ifndef CMANTICS_PARSE_H
-#define CMANTICS_PARSE_H
+#include "../arena.h"
+#include "table.h"
 
-#endif //CMANTICS_PARSE_H
+
+void parse_rows(FILE *file,
+                struct Table *table,
+                Arena *arena);

@@ -1,8 +1,8 @@
-//
-// Created by riain on 01/03/25.
-//
+#pragma once
 
-#ifndef CMANTICS_WRITE_H
-#define CMANTICS_WRITE_H
+#include <stdio.h>
+#include "../../internals/csv/table.h"
 
-#endif //CMANTICS_WRITE_H
+
+void write_values(FILE *file,
+                  const struct Table *table);

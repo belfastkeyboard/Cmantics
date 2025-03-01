@@ -1,8 +1,15 @@
-//
-// Created by riain on 01/03/25.
-//
+#pragma once
 
-#ifndef CMANTICS_TABLE_H
-#define CMANTICS_TABLE_H
+#include "../../csv.h"
+#include "value.h"
+#include <stddef.h>
 
-#endif //CMANTICS_TABLE_H
+
+struct Table
+{
+    size_t columns;
+    size_t c_capacity;
+    size_t rows;
+    size_t r_capacity;
+    ValueCSV ***table;
+};

@@ -1,8 +1,8 @@
-//
-// Created by riain on 01/03/25.
-//
+#pragma once
 
-#ifndef CMANTICS_VALUE_H
-#define CMANTICS_VALUE_H
+#include "../../csv.h"
 
-#endif //CMANTICS_VALUE_H
+
+ValueCSV *make_value_csv(Arena *arena,
+                         HintCSV hint,
+                         TypeCSV type);
