@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdint.h>
 #include "../../internals/json/obj.h"
 #include "../../internals/json/write.h"
 #include "../../internals/json/parse.h"
@@ -279,15 +280,18 @@ void erase_json(ValueJSON *object,
 
 size_t count_json(ValueJSON* container)
 {
-    size_t result = -1;
+    size_t result = SIZE_MAX;
 
-    if (container->hint == JSON_ARRAY)
+    if (container)
     {
-        result = container->type.a->nmemb;
-    }
-    else if (container->hint == JSON_OBJECT)
-    {
-        result = container->type.o->dict->nmemb;
+        if (container->hint == JSON_ARRAY)
+        {
+            result = container->type.a->nmemb;
+        }
+        else if (container->hint == JSON_OBJECT)
+        {
+            result = container->type.o->dict->nmemb;
+        }
     }
 
     return result;
