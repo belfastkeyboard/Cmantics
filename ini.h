@@ -6,7 +6,7 @@
  *
  * INI has no enforced standard, and numerous dialects of INI exist.
  * This parser adheres to its own particular simple dialect.
- * It does not support nesting.
+ * It does not support nesting but does support arrays.
  *
  * Riain Ó Tuathail
  * 01-03-2025
