@@ -173,7 +173,7 @@ void set_ini(INI* ini,
 
         if (!sec)
         {
-            sec = create_header(section,
+            sec = create_section(section,
                                  ini->arena);
 
             insert_dict(ini->sections,
