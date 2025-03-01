@@ -22,7 +22,10 @@ static size_t get_file_size(FILE *file)
     ssize_t fsize;
 
     rewind(file);
-    fseek(file, 0, SEEK_END);
+
+    fseek(file,
+          0,
+          SEEK_END);
 
     fsize = ftell(file);
 
@@ -88,6 +91,59 @@ void destroy_json(JSON **json)
         destroy_arena(&arena);
 
         *json = NULL;
+    }
+}
+
+
+void parse_json(JSON *json,
+                const char *path)
+{
+    FILE *file = fopen(path,
+                       "r");
+
+    if (file)
+    {
+        size_t offset = 0;
+        size_t fsize = get_file_size(file);
+
+        char *fdata = calloc(sizeof(char),
+                             fsize + 1);
+
+        fread(fdata,
+              sizeof(char),
+              fsize,
+              file);
+
+        ValueJSON *value = parse_value_json(fdata,
+                                            &offset,
+                                            json->meta,
+                                            json->arena);
+
+        json->value = value;
+
+        free(fdata);
+
+        fclose(file);
+    }
+}
+
+void write_json(const JSON *json,
+                const char *path)
+{
+    if (json)
+    {
+        FILE *file = fopen(path,
+                           "w");
+
+        if (file)
+        {
+            write_value(file,
+                        json->value,
+                        0,
+                        json->arena);
+        }
+
+        fclose(file);
     }
 }
 
@@ -237,57 +293,4 @@ size_t count_json(ValueJSON* container)
     }
 
     return result;
-}
-
-
-void parse_json(JSON *json,
-                const char *path)
-{
-    FILE *file = fopen(path,
-                       "r");
-
-    if (file)
-    {
-        size_t offset = 0;
-        size_t fsize = get_file_size(file);
-
-        char *fdata = calloc(sizeof(char),
-                             fsize + 1);
-
-        fread(fdata,
-              sizeof(char),
-              fsize,
-              file);
-
-        ValueJSON *value = parse_value_json(fdata,
-                                            &offset,
-                                            json->meta,
-                                            json->arena);
-
-        json->value = value;
-
-        free(fdata);
-
-        fclose(file);
-    }
-}
-
-void write_json(const JSON *json,
-                const char *path)
-{
-    if (json)
-    {
-        FILE *file = fopen(path,
-                           "w");
-
-        if (file)
-        {
-            write_value(file,
-                        json->value,
-                        0,
-                        json->arena);
-        }
-
-        fclose(file);
-    }
 }
