@@ -39,56 +39,9 @@ size_t shift_left(char *line,
     return len - 1;
 }
 
-void string_preparation(char *line,
-                        size_t *indices)
+void cull_newline(char *line)
 {
-    size_t len = strlen(line);
-
-    bool in_quotes = false;
-    size_t comma_count = 0;
-
-    for (size_t i = 0; i < len; ++i)
-    {
-        char c = line[i];
-
-        if (!in_quotes)
-        {
-            if (c == ',')
-            {
-                line[i] = '\0';
-                indices[comma_count++] = i;
-            }
-            else if (c == '\n')
-            {
-                line[i] = '\0';
-            }
-            else if (c == '"')
-            {
-                in_quotes = true;
-
-                if (line[i+1] == '"')
-                {
-                    len = shift_left(line,
-                                     i,
-                                     len);
-                }
-            }
-        }
-        else
-        {
-            if (c == '"')
-            {
-                in_quotes = false;
-
-                if (line[i+1] == '"')
-                {
-                    len = shift_left(line,
-                                     i,
-                                     len);
-                }
-            }
-        }
-    }
+    line[strlen(line) - 1] = '\0';
 }
 
 
@@ -171,16 +124,14 @@ void write_csv(const CSV *csv,
 
         if (file)
         {
-            for (int i = 0; i < 6; i++)
+            for (int r = 0; r < csv->table.rows; r++)
             {
-                for (int j = 0; j < 6; ++j)
+                for (int c = 0; c < csv->table.columns; c++)
                 {
-                    const char *comma = (j < 5) ? "," :
-                                                  "\n";
+                    const char *comma = (c < csv->table.columns - 1) ? "," :
+                                                                       "\n";
 
-                    ValueCSV *value = get_csv(csv,
-                                              j,
-                                              i);
+                    ValueCSV *value = csv->table.table[c][r];
 
                     write_value(file,
                                 value);
@@ -209,56 +160,28 @@ void set_csv(CSV* ini,
              size_t row,
              const char *value)
 {
-    ini->table.table[column][row]->type.s = make_string(value,
-                                                        ini->arena);
+    if (column < ini->table.columns &&
+        row < ini->table.rows)
+    {
+        ini->table.table[column][row]->type.s = make_string(value,
+                                                            ini->arena);
+    }
 }
 
 
 size_t count_columns(const char *header)
 {
     size_t result = 1;
-    bool in_quotes = false;
-    bool in_double_quotes = false;
 
-    for (int i = 0; header[i]; ++i)
+    char c;
+    while ((c = *header))
     {
-        char c = header[i];
-
-        if (!in_quotes)
+        if (c == ',')
         {
-            if (c == ',')
-            {
-                result++;
-            }
-            else if (c == '"')
-            {
-                in_quotes = true;
+            result++;
+        }
 
-                if (header[i + 1] == '"')
-                {
-                    i++;
-                    in_double_quotes = true;
-                }
-            }
-        }
-        else
-        {
-            if (c == '"')
-            {
-                if (in_double_quotes)
-                {
-                    if (header[i + 1] == '"')
-                    {
-                        i++;
-                        in_double_quotes = false;
-                    }
-                }
-                else
-                {
-                    in_quotes = false;
-                }
-            }
-        }
+        header++;
     }
 
     return result;
@@ -324,19 +247,21 @@ ValueCSV *make_value_csv(Arena *arena,
 void parse_header(struct Table *table,
                   char *line,
                   size_t columns,
-                  size_t *indices,
                   Arena *arena)
 {
     reserve_table(table,
                   columns,
                   1);
 
-    string_preparation(line,
-                       indices);
+    cull_newline(line);
 
-    char *token = line;
+    char *save;
+    char *token = strtok_r(line,
+                           ", ",
+                           &save);
 
-    for (int i = 0; i < columns; i++)
+    size_t column = 0;
+    while (token)
     {
         TypeCSV type = {
             .s = make_string(token,
@@ -347,8 +272,11 @@ void parse_header(struct Table *table,
                                          CSV_STRING,
                                          type);
 
-        table->table[i][0] = value;
-        token = &line[indices[i] + 1];
+        table->table[column][table->rows] = value;
+
+        token = strtok_r(NULL,
+                         ", ",
+                         &save);
     }
 
     table->rows++;
@@ -544,20 +472,24 @@ ValueCSV *parse_value(char *token,
 
 void parse_row(struct Table *table,
                char *line,
-               const size_t *indices,
                Arena *arena)
 {
-    resize_rows(table);
+    char *save;
+    char *token = strtok_r(line,
+                           ", ",
+                           &save);
 
-    char *token = line;
-
-    for (int i = 0; i < table->columns; ++i)
+    size_t column = 0;
+    while (token)
     {
         ValueCSV *value = parse_value(token,
                                       arena);
 
-        table->table[i][table->rows] = value;
-        token = &line[indices[i] + 1];
+        table->table[column++][table->rows] = value;
+
+        token = strtok_r(NULL,
+                         ", ",
+                         &save);
     }
 
     table->rows++;
@@ -581,26 +513,26 @@ void parse_csv(CSV *csv,
                     &n,
                     file) != -1)
             {
-                size_t columns = count_columns(line);
-                size_t *indices = alloc_arena(csv->arena,
-                                              sizeof(size_t) * columns);
+                reserve_table(&csv->table,
+                              count_columns(line),
+                              1);
 
-                parse_header(&csv->table,
-                             line,
-                             columns,
-                             indices,
-                             csv->arena);
+                cull_newline(line);
+
+                parse_row(&csv->table,
+                          line,
+                          csv->arena);
 
                 while (getline(&line,
                                &n,
                                file) != -1)
                 {
-                    string_preparation(line,
-                                       indices);
+                    cull_newline(line);
+
+                    resize_rows(&csv->table);
 
                     parse_row(&csv->table,
                               line,
-                              indices,
                               csv->arena);
                 }
             }
