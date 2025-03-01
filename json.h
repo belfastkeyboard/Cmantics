@@ -65,7 +65,7 @@ void write_json(const JSON *value,
                 const char *path);
 
 
-// Retrieve an editable value from the opaque JSON parser
+// Retrieve an editable value from the opaque JSON parser, returns NULL on failure
 ValueJSON *get_json(JSON *json);
 
 // Retrieve a value from a JSON Object, returns NULL on failure
