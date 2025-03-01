@@ -76,6 +76,7 @@ ValueJSON *lookup_json(ValueJSON *object,
 ValueJSON *scan_json(ValueJSON *array,
                      size_t index);
 
+
 // Allocate a value with the JSON parser's allocator, returns default value
 ValueJSON *make_json(JSON* json,
                      HintJSON hint);
