@@ -363,8 +363,8 @@ struct Section *parse_section(FILE *file,
     const char *name = parse_string(substr,
                                     arena);
 
-    struct Section *header = create_header(name,
-                                           arena);
+    struct Section *header = create_section(name,
+                                            arena);
 
     parse_pairs(header,
                 file,
