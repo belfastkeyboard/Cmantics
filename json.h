@@ -72,7 +72,7 @@ ValueJSON *get_json(JSON *json);
 ValueJSON *lookup_json(ValueJSON *object,
                        const char *key);
 
-// Retrieve a value from a JSON Array, returns NULL on failure (invalid index)
+// Retrieve a value from a JSON Array, returns NULL on failure
 ValueJSON *scan_json(ValueJSON *array,
                      size_t index);
 
