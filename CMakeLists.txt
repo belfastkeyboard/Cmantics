@@ -26,8 +26,8 @@ if (BUILD STREQUAL "Release")
 endif()
 
 
-#add_library(
-#    Cmantics ${SOURCES}
-#)
+add_library(
+    Cmantics ${SOURCES}
+)
 
-add_executable(Cmantics main.c ${SOURCES})
+#add_executable(Cmantics main.c ${SOURCES})
