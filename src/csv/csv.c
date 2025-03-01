@@ -148,23 +148,30 @@ void write_csv(const CSV *csv,
 }
 
 
-ValueCSV *get_csv(const CSV *ini,
+ValueCSV *get_csv(const CSV *csv,
                   size_t column,
                   size_t row)
 {
-    return ini->table.table[column][row];
+    ValueCSV *value = NULL;
+
+    if (column < csv->table.columns &&
+        row < csv->table.rows)
+    {
+        value = csv->table.table[column][row];
+    }
+
+    return value;
 }
 
-void set_csv(CSV* ini,
+void set_csv(CSV* csv,
              size_t column,
              size_t row,
-             const char *value)
+             ValueCSV *value)
 {
-    if (column < ini->table.columns &&
-        row < ini->table.rows)
+    if (column < csv->table.columns &&
+        row < csv->table.rows)
     {
-        ini->table.table[column][row]->type.s = make_string(value,
-                                                            ini->arena);
+        csv->table.table[column][row] = value;
     }
 }
 

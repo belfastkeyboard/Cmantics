@@ -51,8 +51,3 @@ void write_csv(const CSV *csv,
 ValueCSV *get_csv(const CSV *csv,
                   size_t column,
                   size_t row);
-
-void set_csv(CSV* csv,
-             size_t column,
-             size_t row,
-             const char *value);
