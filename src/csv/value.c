@@ -1,3 +1,4 @@
+#include "../../internals/arena.h"
 #include "../../internals/csv/value.h"
 
 

@@ -139,8 +139,7 @@ static double handle_float(const char *token)
     return result;
 }
 
-static Boolean handle_boolean(const char *token,
-                              Arena *arena)
+static bool handle_boolean(const char *token)
 {
     bool result;
 
@@ -163,9 +162,7 @@ static Boolean handle_boolean(const char *token,
               token);
     }
 
-    return make_boolean(result,
-                        token,
-                        arena);
+    return result;
 }
 
 
@@ -254,8 +251,7 @@ static ValueCSV *parse_value(char *token,
     }
     else if (hint == CSV_BOOL)
     {
-        type.b = handle_boolean(token,
-                                arena);
+        type.b = handle_boolean(token);
     }
     else
     {

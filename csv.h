@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdbool.h>
-#include "internals/boolean.h"
+#include <stddef.h>
 
 
 typedef struct CSV CSV;
@@ -24,7 +24,7 @@ typedef union TypeCSV
     char    *s;
     long     i;
     double   f;
-    Boolean  b;
+    bool     b;
 } TypeCSV;
 
 

@@ -27,11 +27,14 @@ static void write_float(FILE *file,
 }
 
 static void write_bool(FILE *file,
-                       Boolean boolean)
+                       const bool boolean)
 {
+    const char *string = (boolean) ? "TRUE" :
+                                     "FALSE";
+
     fprintf(file,
             "%s",
-            boolean.string);
+            string);
 }
 
 static void write_string(FILE *file,
