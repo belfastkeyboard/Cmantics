@@ -1,158 +1,122 @@
-# JSON Parsing For C
+# Cmantics
+## File Parsing for C
 
-Simple interface for using the JSON file format in C.
+A simple interface for parsing JSON, INI, and CSV in C.
 
-## TODO
-- Handle comments
-- CSV Parser
 
-## EXAMPLES
-### READ FROM FILE
+## Examples
+### Read from JSON file
 ```c
-json_open();
+JSON *json = create_json();
 
-JSON *json = parse_json("json_example.json");
+parse_json(json, "example.json");
 
-json = json_find(json,
-                 "courses");
+ValueJSON *value = get_json(json);
+ValueJSON *company = lookup_json(value, "company");
+ValueJSON *name = lookup_json(company, "name");
+ValueJSON *founded = lookup_json(company, "founded");
+ValueJSON *isPublic = lookup_json(company, "isPublic");
 
-json = json_lookup(courses,
-                   0);
+printf("\nCompany: {\n\tname: %s,\n\tfounded: %d,\n\tisPublic: %s\n};\n",
+       name->type.s,
+       founded->type.i,
+       (isPublic->type.b) ? "true" : "false");
 
-JSON *course_id = json_find(course,
-                            "course_id");
-
-JSON *course_name = json_find(course,
-                              "course_name");
-
-JSON *credits = json_find(course,
-                          "credits");
-
-JSON *grade = json_find(course,
-                        "grade");
-
-printf("\nCourse: {\n\tcourse_id: %s,\n\tcourse_name: %s,\n\tcredits: %d,\n\tgrade: %s\n};\n",
-       course_id->type.s,
-       course_name->type.s,
-       credits->type.i,
-       grade->type.s);
-
-json_close();
+destroy_json(&json);
 ```
 
-### WRITE TO FILE
+### Read from INI file
 ```c
-json_open();
+INI *ini = create_ini();
 
-JSON *value = parse_json("json_example.json");
+parse_ini(ini, "example.ini");
 
-write_json("json_copy.json",
-           value);
+ValueINI *name = get_ini(ini, "company", "name");
+ValueINI *founded = get_ini(ini, "company", "founded");
+ValueINI *isPublic = get_ini(ini, "company", "isPublic");
 
-json_close();
+printf("\nCompany: {\n\tname: %s,\n\tfounded: %d,\n\tisPublic: %s\n};\n",
+       name->type.s,
+       founded->type.i,
+       isPublic->type.b.string);
+
+destroy_ini(&ini);
 ```
 
-### MODIFY FILE
+### Read from CSV file
 ```c
-json_open();
+CSV *csv = create_csv();
 
-JSON *obj = parse_json("example.json");
+parse_csv(csv, "example.csv");
 
+for (int r = 0; r < rows_csv(csv); r++)
+{
+    for (int c = 0; c < columns_csv(csv); c++)
+    {
+        const char *comma = (c < columns_csv(csv) - 1) ? "," : "\n";
 
-JSON *employees = json_find(obj,
-                            "employees");
+        const ValueCSV *value = get_csv(csv, c, r);
+        
+        if (value.hint == CSV_STRING)
+        {
+            printf("%s%s", value.type.s, comma);
+        }
+        else if (value.hint == CSV_INT)
+        {
+            printf("%ld%s", value.type.i, comma);
+        }
+    }
+    
+    printf("\n");
+}
 
-JSON *employee = json_make_object();
-
-int id = 9545;
-JSON *employee_id = json_make_value(INI_INT,
-                                    &id);
-
-json_push_object(employee->type.o,
-                 "id",
-                 employee_id);
-
-JSON *employee_name = json_make_value(INI_STRING,
-                                      "Paul O'Brien");
-
-json_push_object(employee->type.o,
-                 "name",
-                 employee_name);
-
-json_push_array(employees->type.a,
-                employee);
-
-write_json("example.json",
-           obj);
-
-json_close();
+destroy_csv(&csv);
 ```
 
 ## TYPES
-The ```JSON``` struct contains a type hint and the relevant data:
+Each parser is its own opaque type. 
+They should be created and destroyed with their specific create and destroy functions.
+Parsers user their own internal allocators and must be destroyed or memory will be leaked.
 
+Parsers possess their own ```struct Value``` types.
+These types represent an interface for accessing the possible types retrieved from a given file.
+The type hint provides a way to resolve the actual type contained in the type union.
+
+The below will demonstrate a generic implementation, common to all parsers.
+This hypothetical implementation is for illustrative purposes only. 
+
+#### Value
 ```c
-typedef struct JSON
+typedef struct Value
 {
-    HintJSON hint;
-    TypeJSON type;
-} JSON;
+    Hint hint;
+    Type type;
+} Hint;
 ```
 
-```HintJSON``` is an enum type which indicates the correct type contained in the ```TypeJSON``` value.
-
-```TypeJSON``` is a union. It contains all possible JSON types represented with C types:
+#### Hint
 ```c
-// json type: null
-void *null = NULL;
+typedef enum Hint
+{
+    HINT_INT,
+    HINT_FLOAT,
+    HINT_BOOL,
+    HINT_STRING,
+    HINT_NULL
+} Hint;
+``` 
 
-// json type: string
-char *string = "string";
-
-// json type: integer
-int number_int = 0;
-
-// json type: float
-float number_float = 0.5f;
-
-// json type: bool
-bool true_or_false = false;
-
-// json type: object
-Object *obj;
-
-// json type: array
-Array *arr;
-```
-
-```Object``` and ```Array``` are opaque types.
-
-#### Object
-To retrieve data from an ```Object``` call the ```json_find()``` function and provide a key. 
-If successful returns valid ```JSON*``` else returns ```NULL```.
-
-Insert an element into an object with ```json_push_object()``` and provide a key and value.
-If the key already exists the value will be overwritten, otherwise a new key-value pair will be inserted.
-
-Remove an element from an object with ```json_pop_object()``` and provide a key.
-If the key exists, the element will be removed. 
-If the key does not exist, the object will not be modified.
-
-#### Array
-To retrieve data from an ```Array``` call the ```json_lookup()``` function and provide an index.
-If successful returns valid ```JSON*``` else returns ```NULL```.
-
-Insert an element into an array with ```json_push_array()``` and provide a value.
-The value will be inserted at the back of the array.
-
-Remove an element from an array with ```json_pop_object()``` and provide an index.
-If the index is valid, the element will be removed. 
-If the index is not valid, the object will not be modified.
-
-All other values can be modified in place, e.g.:
+#### Type
 ```c
-JSON *val = parse_json("example.json");
+typedef union Type
+{
+    long        i;
+    double      f;
+    bool        b;
+    const char *s;
+    void       *n;
+} Type;
+``` 
 
-val.hint = INI_INT;
-val.type.i = 45;
-```
+The INI and JSON parsers can contain ```Array``` types and the JSON parser can contain an ```Object``` type. 
+These types are opaque and the corresponding functions must be used to handle them.
