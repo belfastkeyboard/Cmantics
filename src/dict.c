@@ -325,8 +325,8 @@ static size_t find_bucket(struct Bucket *buckets,
 struct Dict *create_dict(Arena *arena,
                          const bool case_sensitive)
 {
-    struct Dict *dict = calloc_arena(arena,
-                                     sizeof(struct Dict));
+    struct Dict *dict = calloc_cmantics_arena(arena,
+                                              sizeof(struct Dict));
 
     dict->case_sensitive = case_sensitive;
 
@@ -437,8 +437,8 @@ struct DictPair *get_iterable_pairs(struct Dict *dict,
           sizeof(struct Bucket),
           pair_cmp);
 
-    struct DictPair *sorted = alloc_arena(arena,
-                                          sizeof(struct DictPair) * dict->nmemb);
+    struct DictPair *sorted = alloc_cmantics_arena(arena,
+                                                   sizeof(struct DictPair) * dict->nmemb);
 
     for (int i = 0; i < dict->nmemb; i++)
     {

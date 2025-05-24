@@ -76,7 +76,7 @@ static void *arena_alloc(struct Page **curr,
 }
 
 
-Arena *create_arena()
+Arena *create_cmantics_arena()
 {
     Arena *arena = malloc(sizeof(Arena));
 
@@ -87,7 +87,7 @@ Arena *create_arena()
     return arena;
 }
 
-void destroy_arena(Arena **arena)
+void destroy_cmantics_arena(Arena **arena)
 {
     arena_destroy_pages(&(*arena)->curr);
 
@@ -97,18 +97,18 @@ void destroy_arena(Arena **arena)
 }
 
 
-void *alloc_arena(Arena *arena,
-                  const size_t size)
+void *alloc_cmantics_arena(Arena *arena,
+                           const size_t size)
 {
     return arena_alloc(&arena->curr,
                        size);
 }
 
-void *calloc_arena(Arena *arena,
-                   size_t size)
+void *calloc_cmantics_arena(Arena *arena,
+                            size_t size)
 {
-    void *ptr = alloc_arena(arena,
-                            size);
+    void *ptr = alloc_cmantics_arena(arena,
+                                     size);
 
     return memset(ptr,
                   0,

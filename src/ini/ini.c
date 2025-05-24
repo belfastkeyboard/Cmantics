@@ -22,10 +22,10 @@ typedef struct INI
 
 INI *create_ini(void)
 {
-    Arena *arena = create_arena();
+    Arena *arena = create_cmantics_arena();
 
-    INI *ini = alloc_arena(arena,
-                           sizeof(INI));
+    INI *ini = alloc_cmantics_arena(arena,
+                                    sizeof(INI));
 
     ini->arena = arena;
     ini->meta = create_array(arena);
@@ -57,7 +57,7 @@ void destroy_ini(INI **ini)
 
         // valgrind complains if we don't do it this way
         Arena *arena = (*ini)->arena;
-        destroy_arena(&arena);
+        destroy_cmantics_arena(&arena);
 
         *ini = NULL;
     }
@@ -167,8 +167,8 @@ ValueINI *get_ini(const INI *ini,
 ValueINI *make_ini(INI* ini,
                    HintINI hint)
 {
-    ValueINI *value = alloc_arena(ini->arena,
-                                   sizeof(ValueINI));
+    ValueINI *value = alloc_cmantics_arena(ini->arena,
+                                           sizeof(ValueINI));
 
     value->hint = hint;
 

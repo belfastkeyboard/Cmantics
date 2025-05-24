@@ -6,8 +6,8 @@
 
 Array *create_array(Arena *arena)
 {
-    Array *array = calloc_arena(arena,
-                                sizeof(Array));
+    Array *array = calloc_cmantics_arena(arena,
+                                         sizeof(Array));
 
     return array;
 }

@@ -18,10 +18,10 @@ typedef struct CSV
 
 CSV *create_csv(void)
 {
-    Arena *arena = create_arena();
+    Arena *arena = create_cmantics_arena();
 
-    CSV *csv = calloc_arena(arena,
-                            sizeof(CSV));
+    CSV *csv = calloc_cmantics_arena(arena,
+                                     sizeof(CSV));
 
     csv->arena = arena;
 
@@ -40,7 +40,7 @@ void destroy_csv(CSV **csv)
         free((*csv)->table.table);
 
         Arena *arena = (*csv)->arena;
-        destroy_arena(&arena);
+        destroy_cmantics_arena(&arena);
 
         *csv = NULL;
     }

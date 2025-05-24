@@ -6,8 +6,8 @@ ValueINI *make_value_ini(Arena *arena,
                          HintINI hint,
                          TypeINI type)
 {
-    ValueINI *value = alloc_arena(arena,
-                                   sizeof(ValueINI));
+    ValueINI *value = alloc_cmantics_arena(arena,
+                                           sizeof(ValueINI));
 
     value->hint = hint;
     value->type = type;

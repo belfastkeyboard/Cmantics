@@ -195,8 +195,8 @@ static char *handle_string(char *data,
     const size_t len = strcspn(data + *offset,
                                "\"");
 
-    char *string = calloc_arena(arena,
-                                len + 1);
+    char *string = calloc_cmantics_arena(arena,
+                                         len + 1);
 
     strncpy(string,
             data + *offset,

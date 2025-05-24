@@ -6,8 +6,8 @@
 struct Section *create_section(const char *name,
                                Arena *arena)
 {
-    struct Section *section = alloc_arena(arena,
-                                         sizeof(struct Section));
+    struct Section *section = alloc_cmantics_arena(arena,
+                                                   sizeof(struct Section));
 
     section->name = name;
     section->pairs = create_dict(arena,

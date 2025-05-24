@@ -38,10 +38,10 @@ static size_t get_file_size(FILE *file)
 
 JSON *create_json(void)
 {
-    Arena *arena = create_arena();
+    Arena *arena = create_cmantics_arena();
 
-    JSON *json = alloc_arena(arena,
-                             sizeof(JSON));
+    JSON *json = alloc_cmantics_arena(arena,
+                                      sizeof(JSON));
 
     HintJSON hint = JSON_NULL;
     TypeJSON type = {
@@ -89,7 +89,7 @@ void destroy_json(JSON **json)
         destroy_array((*json)->meta);
 
         Arena *arena = (*json)->arena;
-        destroy_arena(&arena);
+        destroy_cmantics_arena(&arena);
 
         *json = NULL;
     }
@@ -186,8 +186,8 @@ ValueJSON *scan_json(ValueJSON *array,
 ValueJSON *make_json(JSON* json,
                      HintJSON hint)
 {
-    ValueJSON *value = alloc_arena(json->arena,
-                                   sizeof(ValueJSON));
+    ValueJSON *value = alloc_cmantics_arena(json->arena,
+                                            sizeof(ValueJSON));
 
     value->hint = hint;
 

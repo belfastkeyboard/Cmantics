@@ -6,8 +6,8 @@ ValueJSON *make_value_json(Arena *arena,
                            const HintJSON hint,
                            const TypeJSON type)
 {
-    ValueJSON *value = alloc_arena(arena,
-                                   sizeof(ValueJSON));
+    ValueJSON *value = alloc_cmantics_arena(arena,
+                                            sizeof(ValueJSON));
 
     value->hint = hint;
     value->type = type;

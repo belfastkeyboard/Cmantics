@@ -5,8 +5,8 @@
 Object *make_object(Array *meta,
                     Arena *arena)
 {
-    Object *object = alloc_arena(arena,
-                                 sizeof(Object));
+    Object *object = alloc_cmantics_arena(arena,
+                                          sizeof(Object));
 
     object->dict = create_dict(arena,
                                true);

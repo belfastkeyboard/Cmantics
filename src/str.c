@@ -7,8 +7,8 @@ char *make_string(const char *src,
 {
     const size_t len = strlen(src);
 
-    char *string = calloc_arena(arena,
-                                len + 1);
+    char *string = calloc_cmantics_arena(arena,
+                                         len + 1);
 
     strncpy(string,
             src,

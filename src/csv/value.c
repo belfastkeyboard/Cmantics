@@ -6,8 +6,8 @@ ValueCSV *make_value_csv(Arena *arena,
                          HintCSV hint,
                          TypeCSV type)
 {
-    ValueCSV *value = alloc_arena(arena,
-                                  sizeof(ValueCSV));
+    ValueCSV *value = alloc_cmantics_arena(arena,
+                                           sizeof(ValueCSV));
 
     value->hint = hint;
     value->type = type;
