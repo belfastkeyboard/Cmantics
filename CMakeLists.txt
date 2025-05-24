@@ -6,7 +6,7 @@ set(CMAKE_C_STANDARD 23)
 
 
 # uncomment to compile release build, which removes asserts and compiles with optimisation
-#set(BUILD Release)
+set(BUILD Release)
 
 
 set(SOURCE_DIR ${CMAKE_SOURCE_DIR}/src)
