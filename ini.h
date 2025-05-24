@@ -1,8 +1,8 @@
 /**
- * INI Parser v1.2
+ * @file ini.h
+ * @brief INI Parser
  *
  * Provides utilities for reading, editing and writing INI.
- *
  *
  * INI has no enforced standard, and numerous dialects of INI exist.
  * This parser adheres to its own particular simple dialect.
@@ -13,9 +13,9 @@
  *
  * It is case-insensitive.
  *
- * Riain Ó Tuathail
- * 01-03-2025
- *
+ * @author Riain Ó Tuathail
+ * @date 2025-05-24
+ * @version 1.3
  */
 
 #pragma once
@@ -64,45 +64,46 @@ typedef struct ValueINI
 } ValueINI;
 
 
-// Allocate an INI parser that must be freed with destroy_ini()
+/// Allocate an INI parser that must be freed with destroy_ini()
+__attribute__((warn_unused_result))
 INI *create_ini(void);
 
-// Destroy an allocated INI parser, gracefully handles NULL INI pointers
+/// Destroy an allocated INI parser, gracefully handles NULL INI pointers
 void destroy_ini(INI **ini);
 
 
-// Parse an INI file
+/// Parse an INI file
 void parse_ini(INI *ini,
                const char *filepath);
 
-// Output contents of INI parser to file
+/// Output contents of INI parser to file
 void write_ini(const INI *ini,
                const char *filepath);
 
 
-// Retrieve an editable value from the opaque INI parser, returns NULL on failure
+/// Retrieve an editable value from the opaque INI parser, returns NULL on failure
 ValueINI *get_ini(const INI *ini,
                   const char *section,
                   const char *key);
 
 
-// Allocate a value with the JSON parser's allocator, returns default value
+/// Allocate a value with the JSON parser's allocator, returns default value
 ValueINI *make_ini(INI* ini,
                    HintINI hint);
 
 
-// Set a value in the INI Parser, if value does not exist it will be created
+/// Set a value in the INI Parser, if value does not exist it will be created
 void set_ini(INI* ini,
              const char *section,
              const char *key,
              ValueINI *value);
 
 
-// Erase a key-value pair from the INI Parser
+/// Erase a key-value pair from the INI Parser
 void erase_ini(INI* ini,
                const char *section,
                const char *key);
 
 
-// Get the number of values in an INI Array, returns SIZE_MAX on failure
+/// Get the number of values in an INI Array, returns SIZE_MAX on failure
 size_t count_ini(ValueINI* array);
