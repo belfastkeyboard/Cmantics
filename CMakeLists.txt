@@ -29,5 +29,3 @@ endif()
 add_library(
     Cmantics ${SOURCES}
 )
-
-#add_executable(Cmantics main.c ${SOURCES})
