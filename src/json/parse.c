@@ -229,7 +229,7 @@ static Object *parse_object(char *data,
                     pair.key,
                     pair.value);
 
-        *offset = strspn(data + *offset, ", \n\t\v\r\f");
+        *offset += strspn(data + *offset, ", \n\t\v\r\f");
     }
 
     return object;
