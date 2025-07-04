@@ -228,6 +228,8 @@ static Object *parse_object(char *data,
         insert_dict(object->dict,
                     pair.key,
                     pair.value);
+
+        *offset = strspn(data + *offset, ", \n\t\v\r\f");
     }
 
     return object;
