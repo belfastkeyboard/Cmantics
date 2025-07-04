@@ -25,7 +25,4 @@ if (BUILD STREQUAL "Release")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=native -funroll-loops -ffast-math")
 endif()
 
-
-add_library(
-    Cmantics ${SOURCES}
-)
+add_library(${PROJECT_NAME} ${SOURCES})
