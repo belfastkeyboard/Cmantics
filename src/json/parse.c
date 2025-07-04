@@ -5,6 +5,7 @@
 #include "../../internals/json/obj.h"
 #include "../../internals/json/parse.h"
 
+#define WHITESPACE " \n\t\v\r\f"
 
 enum Eval
 {
@@ -213,7 +214,6 @@ static Object *parse_object(char *data,
                             Array *meta,
                             Arena *arena)
 {
-
     Object *object = make_object(meta,
                                  arena);
 
@@ -229,7 +229,7 @@ static Object *parse_object(char *data,
                     pair.key,
                     pair.value);
 
-        *offset += strspn(data + *offset, ", \n\t\v\r\f");
+        *offset += strspn(data + *offset, "," WHITESPACE);
     }
 
     return object;
@@ -245,7 +245,7 @@ static Array *parse_array(char *data,
                               arena);
 
     *offset += strspn(data + *offset,
-                      " \n");
+                      WHITESPACE);
 
     while (data[*offset] != ']')
     {
@@ -258,7 +258,7 @@ static Array *parse_array(char *data,
                    value);
 
         *offset += strspn(data + *offset,
-                          ", \n");
+                          "," WHITESPACE);
     }
 
     *offset += strspn(data + *offset,
@@ -278,7 +278,7 @@ static struct DictPair parse_pair(char *data,
                                     arena);
 
     *offset += strspn(data + *offset,
-                      ": ");
+                      ":" WHITESPACE);
 
     void *value = parse_value_json(data,
                                    offset,
